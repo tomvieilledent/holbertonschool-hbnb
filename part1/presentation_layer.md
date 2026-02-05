@@ -1,53 +1,22 @@
 ```mermaid
----
-config:
-  layout: dagre
----
-graph TD
-    %% =====================
-    %% Packages simulés avec subgraph
-    %% =====================
+flowchart TB
+  subgraph PL ["Presentation Layer (API)"]
+    API["API Endpoints"]
+        
+  end
 
-    subgraph Presentation_Layer ["Presentation Layer"]
-        UserService
-        PlaceService
-        ReviewService
-        AmenityService
-        API_Controller["API Controller"]
-    end
+  subgraph BL["Business Logic Layer"]
+    FACADE["HBnBFacade"]
+    MODELS["Models\n(User, Place, Review, Amenity)"]
+  end
 
-    subgraph Business_Logic_Layer ["Business Logic Layer"]
-        HBnBFacade["HBnB Facade"]
-        User
-        Place
-        Review
-        Amenity
-    end
+  subgraph PEL["Persistence Layer"]
+    REPO["Repositories / DAO"]
+    DB[(Database)]
+  end
 
-    subgraph Persistence_Layer ["Persistence Layer"]
-        UserRepository
-        PlaceRepository
-        ReviewRepository
-        AmenityRepository
-        Database["Database"]
-    end
+  API -->|calls| FACADE
+  FACADE -->|uses| MODELS
+  FACADE -->|CRUD| REPO
+  REPO -->|read/write| DB
 
-    %% =====================
-    %% Dépendances / communications
-    %% =====================
-    API_Controller --> HBnBFacade
-
-    HBnBFacade --> User
-    HBnBFacade --> Place
-    HBnBFacade --> Review
-    HBnBFacade --> Amenity
-
-    User --> UserRepository
-    Place --> PlaceRepository
-    Review --> ReviewRepository
-    Amenity --> AmenityRepository
-
-    UserRepository --> Database
-    PlaceRepository --> Database
-    ReviewRepository --> Database
-    AmenityRepository --> Database
