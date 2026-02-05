@@ -6,9 +6,9 @@ classDiagram
         +datetime created_at
         +datetime updated_at
         +create()
-        +get(id)
-        +update(data)
-        +delete()
+        +read()
+        +update()
+        +delate()
     }
 
     class User {
@@ -37,19 +37,17 @@ classDiagram
         +string comment
     }
 
-    %% Inheritance
+    %% Inheritance from parent class
     BaseModel <|-- User
     BaseModel <|-- Place
     BaseModel <|-- Amenity
     BaseModel <|-- Review
 
-    %% Life cycle relations (Composition)
+    %% Composition (Life cycle dependencies)
     User "1" *-- "0..*" Place : owns
     Place "1" *-- "0..*" Amenity : contains
 
-    %% Review relations
+    %% Associations
     User "1" -- "0..*" Review : writes
     Place "1" -- "0..*" Review : is rated by
-
-    %% Booking relation
     User "0..*" -- "0..*" Place : rents
