@@ -5,9 +5,13 @@ classDiagram
         +UUID id
         +datetime created_at
         +datetime updated_at
+        +create()
+        +get(id)
+        +update(data)
+        +delete()
     }
 
-    class Utilisateur {
+    class User {
         +string first_name
         +string last_name
         +string email
@@ -33,19 +37,19 @@ classDiagram
         +string comment
     }
 
-    %% Héritage de la classe parente
-    BaseModel <|-- Utilisateur
+    %% Inheritance
+    BaseModel <|-- User
     BaseModel <|-- Place
     BaseModel <|-- Amenity
     BaseModel <|-- Review
 
-    %% Relations de cycle de vie (Composition)
-    Utilisateur "1" *-- "0..*" Place : est propriétaire
-    Place "1" *-- "0..*" Amenity : possède
+    %% Life cycle relations (Composition)
+    User "1" *-- "0..*" Place : owns
+    Place "1" *-- "0..*" Amenity : contains
 
-    %% Relations de Review
-    Utilisateur "1" -- "0..*" Review : rédige
-    Place "1" -- "0..*" Review : est notée par
+    %% Review relations
+    User "1" -- "0..*" Review : writes
+    Place "1" -- "0..*" Review : is rated by
 
-    %% Relation Client (n'affecte pas l'existence de la place)
-    Utilisateur "0..*" -- "0..*" Place : loue
+    %% Booking relation
+    User "0..*" -- "0..*" Place : rents
