@@ -1,31 +1,30 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Client
-    participant API
-    participant UserInstance
-    participant DB
+    participant C as Client
+    participant A as API
+    participant U as UserInstance
+    participant D as Database
 
-    Client->>API: POST /register (data)
-    activate API
+    C->>A: register(data)
+    activate A
     
-    Note over API: Validation logic
+    A->>A: Validate data
 
-    create participant UserInstance
-    API->>UserInstance: new(first_name, last_name, email, password)
-    activate UserInstance
-    Note right of UserInstance: BaseModel sets UUID & created_at
-    UserInstance-->>API: instance created
-    deactivate UserInstance
+    Note over U: BaseModel: Sets UUID & timestamps
+    A->>U: Instantiate User
+    activate U
+    U-->>A: instance ready
+    deactivate U
 
-    API->>UserInstance: create()
-    activate UserInstance
-    UserInstance->>DB: INSERT user data
-    activate DB
-    DB-->>UserInstance: 201 Created
-    deactivate DB
-    UserInstance-->>API: success
-    deactivate UserInstance
+    A->>U: create()
+    activate U
+    U->>D: INSERT User
+    activate D
+    D-->>U: Saved
+    deactivate D
+    U-->>A: success
+    deactivate U
 
-    API-->>Client: Return User Object (JSON)
-    deactivate API
+    A-->>C: 201 Created (JSON)
+    deactivate A
