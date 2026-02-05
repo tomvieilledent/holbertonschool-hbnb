@@ -1,43 +1,33 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    participant Client as 👤 Client
-    participant API as ⚙️ API Controller
-    participant Owner as 👨‍💼 User (Owner)
-    participant Place as 🏠 Place (Owned)
-    participant DB as 🗄️ Database
+    participant U as 👤 Client
+    participant A as ⚙️ API
+    participant M as 🏗️ User Instance
+    participant D as 🗄️ Database
 
-    Note over Client, DB: Process: Delete Owner with Cascade
+    U->>A: register(first_name, last_name, email, password)
+    activate A
 
-    Client->>API: delateAccount(userId)
-    activate API
+    A->>A: Validate user input (email format, etc.)
 
-    API->>DB: fetchUserWithPlaces(userId)
-    activate DB
-    DB-->>API: User Data + List of Places
-    deactivate DB
+    Note over M: Initialization (BaseModel logic)
+    create participant M
+    A->>M: new User(data)
+    activate M
+    M->>M: Set UUID & created_at
+    M-->>A: User object ready
+    deactivate M
 
-    API->>Owner: delate()
-    activate Owner
+    Note over M: Persistence (CRUD method)
+    A->>M: create()
+    activate M
+    M->>D: INSERT INTO users (id, first_name, email, created_at, ...)
+    activate D
+    D-->>M: Confirmation (Success)
+    deactivate D
+    M-->>A: User persisted
+    deactivate M
 
-    Note right of Owner: Composition logic starts
-
-    loop For each Place in User.places
-        Owner->>Place: delate()
-        activate Place
-        Place->>DB: DELETE FROM amenities WHERE place_id = ...
-        Place->>DB: DELETE FROM places WHERE id = ...
-        Place-->>Owner: Place & Amenities deleted
-        deactivate Place
-    end
-
-    Owner->>DB: DELETE FROM users WHERE id = ...
-    activate DB
-    DB-->>Owner: User deleted
-    deactivate DB
-
-    Owner-->>API: Deletion complete
-    deactivate Owner
-
-    API-->>Client: 204 No Content (Success)
-    deactivate API
+    A-->>U: 201 Created (Return User details)
+    deactivate A
