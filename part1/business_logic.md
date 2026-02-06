@@ -51,3 +51,4 @@ classDiagram
     User "1" -- "0..*" Review : writes
     Place "1" -- "0..*" Review : is rated by
     User "0..*" -- "0..*" Place : rents
+    ```

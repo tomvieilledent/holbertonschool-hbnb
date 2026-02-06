@@ -19,4 +19,4 @@ flowchart TB
   FACADE -->|uses| MODELS
   FACADE -->|CRUD| REPO
   REPO -->|read/write| DB
-
+```
