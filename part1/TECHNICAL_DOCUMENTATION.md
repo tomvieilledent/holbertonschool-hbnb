@@ -1,10 +1,10 @@
 # HBnB Evolution - Technical Documentation
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [High-Level Architecture](#high-level-architecture)
-3. [Business Logic Layer](#business-logic-layer)
-4. [API Sequence Diagrams](#api-sequence-diagrams)
+1. [Introduction](#1-introduction)
+2. [High-Level Architecture](#2-high-level-architecture)
+3. [Business Logic Layer](#3-business-logic-layer)
+4. [API Sequence Diagrams](#4-api-sequence-diagrams)
 
 ---
 
