@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from app.persistence.repository import InMemoryRepository
 
 
