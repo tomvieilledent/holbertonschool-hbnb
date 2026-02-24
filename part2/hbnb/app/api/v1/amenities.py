@@ -8,7 +8,9 @@ class Amenity(BaseModel):
         self.name = self.verify_len(name)
 
     def verify_len(name):
-        if len(name) < 50:
-            return name
-        else:
+        if not isinstance(name, str):
+            raise TypeError("Amenity name must be a string.")
+        if len(name) > 50:
             raise ValueError("Amenity name cannot exceed 50 characters")
+        return name
+            
