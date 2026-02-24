@@ -31,5 +31,6 @@ class Users(BaseModel):
             validate_email(email)
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
+        # - A faire, vérifier que dans la data base l'adresse mail n'existe pas - #
         return email
     
