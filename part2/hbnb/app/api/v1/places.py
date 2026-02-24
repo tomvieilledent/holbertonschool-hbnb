@@ -19,7 +19,7 @@ class Place(BaseModel):
         if not isinstance(title, str):
             raise TypeError("Title must be a string.")
         if len(title) > 100:
-            raise ValueError("Title cannot exceed 100 characters")
+            raise ValueError("Title cannot exceed 100 characters.")
         return title
 
     def description_verif(self, description):
