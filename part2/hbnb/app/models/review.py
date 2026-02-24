@@ -1,6 +1,6 @@
-from base_model import BaseModel
-from place import Place
-from user import Users
+from app.models.base_model import BaseModel
+from app.models.place import Place
+from app.models.user import User
 
 
 class Review(BaseModel):
@@ -11,27 +11,31 @@ class Review(BaseModel):
         self.place = self.place_verif(place)
         self.user = self.user_verif(user)
 
-    def text_verif(self, text):
+    @staticmethod
+    def text_verif(text):
         if not isinstance(text, str):
-            raise ValueError("Review text must be a string.")
+            raise TypeError("Review text must be a string.")
         text = text.strip()
         if text == "":
             raise ValueError("Review text cannot be empty.")
         return text
 
-    def rating_verif(self, rating):
+    @staticmethod
+    def rating_verif(rating):
         if not isinstance(rating, int):
             raise TypeError("Rating must be an integer.")
         if rating < 1 or rating > 5:
             raise ValueError("Rating must be between 1 and 5.")
         return rating
 
-    def place_verif(self, place):
+    @staticmethod
+    def place_verif(place):
         if not isinstance(place, Place):
-            raise ValueError("Place is required.")
+            raise TypeError("Place is required.")
         return place
 
-    def user_verif(self, user):
-        if not isinstance(user, Users):
-            raise ValueError("User is required.")
+    @staticmethod
+    def user_verif(user):
+        if not isinstance(user, User):
+            raise TypeError("User is required.")
         return user

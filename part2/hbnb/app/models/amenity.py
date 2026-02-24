@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from base_model import BaseModel
+from app.models.base_model import BaseModel
 
 
 class Amenity(BaseModel):
@@ -8,6 +8,7 @@ class Amenity(BaseModel):
         super().__init__()
         self.name = self.len_verif(name)
 
+    @staticmethod
     def len_verif(name):
         if not isinstance(name, str):
             raise TypeError("Amenity name must be a string.")
