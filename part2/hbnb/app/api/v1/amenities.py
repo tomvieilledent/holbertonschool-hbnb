@@ -11,6 +11,6 @@ class Amenity(BaseModel):
         if not isinstance(name, str):
             raise TypeError("Amenity name must be a string.")
         if len(name) > 50:
-            raise ValueError("Amenity name cannot exceed 50 characters")
+            raise ValueError("Amenity name cannot exceed 50 characters.")
         return name
             

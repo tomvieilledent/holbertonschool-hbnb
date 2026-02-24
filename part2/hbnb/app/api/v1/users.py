@@ -19,7 +19,7 @@ class Users(BaseModel):
 
     def last_name_verif(self, last_name):
         if not isinstance(last_name, str):
-            raise TypeError("Last name must be a string")
+            raise TypeError("Last name must be a string.")
         if len(last_name) > 50:
             raise ValueError("Last name cannot exceed 50 characters.")
         return last_name
