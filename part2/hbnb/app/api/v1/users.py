@@ -1,4 +1,4 @@
-from BaseModel import BaseModel
+from base_model import BaseModel
 from email_validator import validate_email, EmailNotValidError
 
 class Users(BaseModel):
