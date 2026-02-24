@@ -8,11 +8,3 @@ class Users(BaseModel):
         self.email = email
         self.password = password
         self.admin = admin
-
-    def add_review(self, review):
-        """Add a review to the place."""
-        self.reviews.append(review)
-
-    def add_amenity(self, amenity):
-        """Add an amenity to the place."""
-        self.amenities.append(amenity)
