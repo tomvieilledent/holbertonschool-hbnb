@@ -1,5 +1,5 @@
 from BaseModel import BaseModel
-from email_validator import validate_email, EmailNotValidError
+from email_validator import validate_email
 
 class Users(BaseModel):
     def __init__(self, first_name, last_name, email, password, is_admin=False):
