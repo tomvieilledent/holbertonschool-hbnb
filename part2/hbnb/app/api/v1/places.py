@@ -46,7 +46,7 @@ class Place(BaseModel):
         
     def owner_verif(self, owner):
         if not isinstance(owner, Users):
-            raise TypeError("Owner must be an user")
+            raise TypeError("Owner must be an user.")
 
     def add_review(self, review):
         """Add a review to the place."""
