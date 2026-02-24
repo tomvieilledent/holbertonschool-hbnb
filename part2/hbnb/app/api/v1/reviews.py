@@ -1,7 +1,9 @@
 from base_model import BaseModel
+from places import Place
+from users import Users
 
 
-class Users(BaseModel):
+class Review(BaseModel):
     def __init__(self, text, rating, place, user):
         super().__init__()
         super().__init__()
@@ -21,16 +23,16 @@ class Users(BaseModel):
     def _validate_rating(self, rating):
         if not isinstance(rating, int):
             raise TypeError("Rating must be an integer")
-        if rating < 1 or rating < 5:
+        if rating < 1 or rating > 5:
             raise ValueError("Rating must be between 1 and 5")
         return rating
 
     def _validate_place(self, place):
-        if place is None:
+        if not isinstance(place, Place):
             raise ValueError("Place is required")
         return place
 
     def _validate_user(self, user):
-        if user is None:
+        if not isinstance(user, Users):
             raise ValueError("User is required")
         return user
