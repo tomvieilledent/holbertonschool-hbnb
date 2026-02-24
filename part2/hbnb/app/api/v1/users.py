@@ -32,3 +32,4 @@ class Users(BaseModel):
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
         return email
+    

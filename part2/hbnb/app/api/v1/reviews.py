@@ -6,13 +6,12 @@ from users import Users
 class Review(BaseModel):
     def __init__(self, text, rating, place, user):
         super().__init__()
-        super().__init__()
-        self.text = self._validate_text(text)
-        self.rating = self._validate_rating(rating)
-        self.place = self._validate_place(place)
-        self.user = self._validate_user(user)
+        self.text = self.text_verif(text)
+        self.rating = self.rating_verif(rating)
+        self.place = self.place_verif(place)
+        self.user = self.user_verif(user)
 
-    def _validate_text(self, text):
+    def text_verif(self, text):
         if not isinstance(text, str):
             raise ValueError("Review text must be a string.")
         text = text.strip()
@@ -20,19 +19,19 @@ class Review(BaseModel):
             raise ValueError("Review text cannot be empty.")
         return text
 
-    def _validate_rating(self, rating):
+    def rating_verif(self, rating):
         if not isinstance(rating, int):
             raise TypeError("Rating must be an integer.")
         if rating < 1 or rating > 5:
             raise ValueError("Rating must be between 1 and 5.")
         return rating
 
-    def _validate_place(self, place):
+    def place_verif(self, place):
         if not isinstance(place, Place):
             raise ValueError("Place is required.")
         return place
 
-    def _validate_user(self, user):
+    def user_verif(self, user):
         if not isinstance(user, Users):
             raise ValueError("User is required.")
         return user
