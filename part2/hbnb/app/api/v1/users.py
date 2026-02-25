@@ -30,7 +30,7 @@ class UserList(Resource):
 
         existing_user = facade.get_user_by_email(user_data['email'])
         if existing_user:
-            return {'error': 'Email already registered'}, 400
+            return {'message': 'Email already registered'}, 400
 
         new_user = facade.create_user(user_data)
         return {
@@ -63,7 +63,7 @@ class UserResource(Resource):
         """Get user details by ID"""
         user = facade.get_user(user_id)
         if not user:
-            return {'error': 'User not found'}, 404
+            return {'message': 'User not found'}, 404
 
         return {
             'id': user.id,
@@ -83,10 +83,10 @@ class UserResource(Resource):
         try:
             user = facade.update_user(user_id, data)
         except ValueError:
-            return {'error': 'Email already registered'}, 400
+            return {'message': 'Email already registered'}, 400
 
         if not user:
-            return {'error': 'User not found'}, 404
+            return {'message': 'User not found'}, 404
 
         return {
             'id': user.id,
