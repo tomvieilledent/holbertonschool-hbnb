@@ -5,14 +5,22 @@ from app.models.user import User
 class Place(BaseModel):
     def __init__(self, title, description, price, latitude, longitude, owner):
         super().__init__()
-        self.title = self.title_verif(title)
-        self.description = self.description_verif(description)
-        self.price = self.price_verif(price)
-        self.latitude = self.latitude_verif(latitude)
-        self.longitude = self.longitude_verif(longitude)
-        self.owner = self.owner_verif(owner)
-        self.reviews = []  # List to store related reviews
-        self.amenities = []  # List to store related amenities
+        self.title = title
+        self.description = description
+        self.price = price
+        self.latitude = latitude
+        self.longitude = longitude
+        self.owner = owner
+        self.reviews = []
+        self.amenities = []
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, title):
+        self._title = self.title_verif(title)
 
     @staticmethod
     def title_verif(title):
@@ -22,6 +30,14 @@ class Place(BaseModel):
             raise ValueError("Title cannot exceed 100 characters.")
         return title
 
+    @property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, description):
+        self._description = self.description_verif(description)
+
     @staticmethod
     def description_verif(description):
         if description is None:
@@ -29,6 +45,14 @@ class Place(BaseModel):
         if not isinstance(description, str):
             raise TypeError("Description must be a string.")
         return description
+
+    @property
+    def price(self):
+        return self._price
+
+    @price.setter
+    def price(self, price):
+        self._price = self.price_verif(price)
 
     @staticmethod
     def price_verif(price):
@@ -38,6 +62,14 @@ class Place(BaseModel):
             raise ValueError("Price must be positive.")
         return float(price)
 
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, latitude):
+        self._latitude = self.latitude_verif(latitude)
+
     @staticmethod
     def latitude_verif(latitude):
         if not isinstance(latitude, (int, float)):
@@ -46,6 +78,14 @@ class Place(BaseModel):
             raise ValueError("Latitude must be in range -90 : 90.")
         return float(latitude)
 
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, longitude):
+        self._longitude = self.longitude_verif(longitude)
+
     @staticmethod
     def longitude_verif(longitude):
         if not isinstance(longitude, (int, float)):
@@ -53,6 +93,14 @@ class Place(BaseModel):
         if not (-180 <= float(longitude) <= 180):
             raise ValueError("Longitude must be in range -180 : 180.")
         return float(longitude)
+
+    @property
+    def owner(self):
+        return self._owner
+
+    @owner.setter
+    def owner(self, owner):
+        self._owner = self.owner_verif(owner)
 
     @staticmethod
     def owner_verif(owner):

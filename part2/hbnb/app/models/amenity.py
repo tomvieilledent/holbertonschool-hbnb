@@ -6,7 +6,15 @@ from app.models.base_model import BaseModel
 class Amenity(BaseModel):
     def __init__(self, name):
         super().__init__()
-        self.name = self.len_verif(name)
+        self.name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = self.len_verif(name)
 
     @staticmethod
     def len_verif(name):
