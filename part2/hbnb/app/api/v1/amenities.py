@@ -44,7 +44,7 @@ class AmenityResource(Resource):
         """Get amenity details by ID"""
         amenity = facade.get_amenity(amenity_id)
         if not amenity:
-            return {'error': 'Amenity not found'}, 404
+            return {'message': 'Amenity not found'}, 404
 
         return {
             'id': amenity.id,
@@ -62,10 +62,10 @@ class AmenityResource(Resource):
         try:
             amenity = facade.update_amenity(amenity_id, data)
         except ValueError:
-            return {'error': 'Amenity already registered'}, 400
+            return {'message': 'Amenity already registered'}, 400
 
         if not amenity:
-            return {'error': 'Amenity not found'}, 404
+            return {'message': 'Amenity not found'}, 404
 
         return {
             'id': amenity.id,
