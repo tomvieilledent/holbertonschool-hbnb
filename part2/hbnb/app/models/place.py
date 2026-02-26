@@ -3,7 +3,10 @@ from app.models.user import User
 
 
 class Place(BaseModel):
+    """Place entity with location, owner, and relations."""
+
     def __init__(self, title, description, price, latitude, longitude, owner):
+        """Create a place instance."""
         super().__init__()
         self.title = title
         self.description = description
@@ -16,97 +19,86 @@ class Place(BaseModel):
 
     @property
     def title(self):
+        """Return the place title."""
         return self._title
 
     @title.setter
     def title(self, title):
-        self._title = self.title_verif(title)
-
-    @staticmethod
-    def title_verif(title):
+        """Set and validate the place title."""
         if not isinstance(title, str):
             raise TypeError("Title must be a string.")
         if len(title) > 100:
             raise ValueError("Title cannot exceed 100 characters.")
-        return title
+        self._title = title
 
     @property
     def description(self):
+        """Return the place description."""
         return self._description
 
     @description.setter
     def description(self, description):
-        self._description = self.description_verif(description)
-
-    @staticmethod
-    def description_verif(description):
+        """Set and validate the place description."""
         if description is None:
-            return None
+            self._description = None
+            return
         if not isinstance(description, str):
             raise TypeError("Description must be a string.")
-        return description
+        self._description = description
 
     @property
     def price(self):
+        """Return the nightly price."""
         return self._price
 
     @price.setter
     def price(self, price):
-        self._price = self.price_verif(price)
-
-    @staticmethod
-    def price_verif(price):
+        """Set and validate the nightly price."""
         if not isinstance(price, (int, float)):
             raise TypeError("Price must be a float.")
         if price < 0:
             raise ValueError("Price must be positive.")
-        return float(price)
+        self._price = float(price)
 
     @property
     def latitude(self):
+        """Return the latitude."""
         return self._latitude
 
     @latitude.setter
     def latitude(self, latitude):
-        self._latitude = self.latitude_verif(latitude)
-
-    @staticmethod
-    def latitude_verif(latitude):
+        """Set and validate latitude coordinates."""
         if not isinstance(latitude, (int, float)):
             raise TypeError("Latitude must be a float.")
         if not (-90 <= float(latitude) <= 90):
             raise ValueError("Latitude must be in range -90 : 90.")
-        return float(latitude)
+        self._latitude = float(latitude)
 
     @property
     def longitude(self):
+        """Return the longitude."""
         return self._longitude
 
     @longitude.setter
     def longitude(self, longitude):
-        self._longitude = self.longitude_verif(longitude)
-
-    @staticmethod
-    def longitude_verif(longitude):
+        """Set and validate longitude coordinates."""
         if not isinstance(longitude, (int, float)):
             raise TypeError("Longitude must be a float.")
         if not (-180 <= float(longitude) <= 180):
             raise ValueError("Longitude must be in range -180 : 180.")
-        return float(longitude)
+        self._longitude = float(longitude)
 
     @property
     def owner(self):
+        """Return the place owner."""
         return self._owner
 
     @owner.setter
     def owner(self, owner):
-        self._owner = self.owner_verif(owner)
-
-    @staticmethod
-    def owner_verif(owner):
+        """Set and validate the place owner."""
         if not isinstance(owner, User):
             raise TypeError("Owner must be an user.")
-        return owner
+        self._owner = owner
 
     def add_review(self, review):
         """Add a review to the place."""

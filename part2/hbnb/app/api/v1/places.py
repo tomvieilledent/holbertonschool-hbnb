@@ -1,3 +1,5 @@
+"""Place API endpoints."""
+
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -5,6 +7,7 @@ api = Namespace('places', description='Place operations')
 
 
 def _serialize_owner(owner):
+    """Serialize an owner object for API output."""
     if not owner:
         return None
     return {
@@ -16,6 +19,7 @@ def _serialize_owner(owner):
 
 
 def _serialize_amenity(amenity):
+    """Serialize an amenity object for API output."""
     return {
         'id': amenity.id,
         'name': amenity.name,
@@ -58,6 +62,8 @@ place_model = api.model('Place', {
 
 @api.route('/')
 class PlaceList(Resource):
+    """Collection endpoints for places."""
+
     @api.expect(place_model, validate=True)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
@@ -93,6 +99,8 @@ class PlaceList(Resource):
 
 @api.route('/<place_id>')
 class PlaceResource(Resource):
+    """Item endpoints for a single place."""
+
     @api.response(200, 'Place details retrieved successfully')
     @api.response(404, 'Place not found')
     def get(self, place_id):
@@ -142,6 +150,8 @@ class PlaceResource(Resource):
 
 @api.route('/<place_id>/reviews')
 class PlaceReviewList(Resource):
+    """Endpoint to list reviews for a place."""
+
     @api.response(200, 'List of reviews for the place retrieved successfully')
     @api.response(404, 'Place not found')
     def get(self, place_id):

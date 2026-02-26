@@ -3,7 +3,10 @@ from email_validator import validate_email, EmailNotValidError
 
 
 class User(BaseModel):
+    """User entity with identity and email validation."""
+
     def __init__(self, first_name, last_name, email, password, is_admin=False):
+        """Create a user instance."""
         super().__init__()
         self.first_name = first_name
         self.last_name = last_name
@@ -13,50 +16,44 @@ class User(BaseModel):
 
     @property
     def first_name(self):
+        """Return the user's first name."""
         return self._first_name
 
     @first_name.setter
     def first_name(self, first_name):
-        self._first_name = self.first_name_verif(first_name)
-
-    @staticmethod
-    def first_name_verif(first_name):
+        """Set and validate the user's first name."""
         if not isinstance(first_name, str):
             raise TypeError("First name must be a string.")
         if len(first_name) > 50:
             raise ValueError("First name cannot exceed 50 characters.")
-        return first_name
+        self._first_name = first_name
 
     @property
     def last_name(self):
+        """Return the user's last name."""
         return self._last_name
 
     @last_name.setter
     def last_name(self, last_name):
-        self._last_name = self.last_name_verif(last_name)
-
-    @staticmethod
-    def last_name_verif(last_name):
+        """Set and validate the user's last name."""
         if not isinstance(last_name, str):
             raise TypeError("Last name must be a string.")
         if len(last_name) > 50:
             raise ValueError("Last name cannot exceed 50 characters.")
-        return last_name
+        self._last_name = last_name
 
     @property
     def email(self):
+        """Return the user's email."""
         return self._email
 
     @email.setter
     def email(self, email):
-        self._email = self.email_verif(email)
-
-    @staticmethod
-    def email_verif(email):
+        """Set and validate the user's email."""
         if not isinstance(email, str):
             raise TypeError("Email must be a string.")
         try:
             validate_email(email)
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
-        return email
+        self._email = email

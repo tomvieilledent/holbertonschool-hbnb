@@ -1,3 +1,5 @@
+"""Review API endpoints."""
+
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -21,6 +23,7 @@ review_update_model = api.model('ReviewUpdate', {
 
 
 def _serialize_user(user):
+    """Serialize a user object for API output."""
     return {
         'id': user.id,
         'first_name': user.first_name,
@@ -30,6 +33,7 @@ def _serialize_user(user):
 
 
 def _serialize_place(place):
+    """Serialize a place object for API output."""
     return {
         'id': place.id,
         'title': place.title,
@@ -40,6 +44,8 @@ def _serialize_place(place):
 
 @api.route('/')
 class ReviewList(Resource):
+    """Collection endpoints for reviews."""
+
     @api.expect(review_model, validate=True)
     @api.response(201, 'Review successfully created')
     @api.response(400, 'Invalid input data')
@@ -92,6 +98,8 @@ class ReviewList(Resource):
 
 @api.route('/<review_id>')
 class ReviewResource(Resource):
+    """Item endpoints for a single review."""
+
     @api.response(200, 'Review details retrieved successfully')
     @api.response(404, 'Review not found')
     def get(self, review_id):

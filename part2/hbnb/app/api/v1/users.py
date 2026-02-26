@@ -1,3 +1,5 @@
+"""User API endpoints."""
+
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -20,6 +22,8 @@ user_update_model = api.model('UserUpdate', {
 
 @api.route('/')
 class UserList(Resource):
+    """Collection endpoints for users."""
+
     @api.expect(user_model, validate=True)
     @api.response(201, 'User successfully created')
     @api.response(400, 'Email already registered')
@@ -57,6 +61,8 @@ class UserList(Resource):
 
 @api.route('/<user_id>')
 class UserResource(Resource):
+    """Item endpoints for a single user."""
+
     @api.response(200, 'User details retrieved successfully')
     @api.response(404, 'User not found')
     def get(self, user_id):

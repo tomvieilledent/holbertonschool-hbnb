@@ -1,3 +1,5 @@
+"""Amenity API endpoints."""
+
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -11,6 +13,8 @@ amenity_model = api.model('Amenity', {
 
 @api.route('/')
 class AmenityList(Resource):
+    """Collection endpoints for amenities."""
+
     @api.expect(amenity_model, validate=True)
     @api.response(201, 'Amenity successfully created')
     @api.response(400, 'Invalid input data')
@@ -38,6 +42,8 @@ class AmenityList(Resource):
 
 @api.route('/<amenity_id>')
 class AmenityResource(Resource):
+    """Item endpoints for a single amenity."""
+
     @api.response(200, 'Amenity details retrieved successfully')
     @api.response(404, 'Amenity not found')
     def get(self, amenity_id):
