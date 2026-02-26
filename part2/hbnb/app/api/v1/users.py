@@ -37,7 +37,10 @@ class UserList(Resource):
         if existing_user:
             return {'message': 'Email already registered'}, 400
 
-        new_user = facade.create_user(user_data)
+        try:
+            new_user = facade.create_user(user_data)
+        except (TypeError, ValueError) as exc:
+            return {'message': str(exc)}, 400
         return {
             'id': new_user.id,
             'first_name': new_user.first_name,
@@ -89,8 +92,12 @@ class UserResource(Resource):
 
         try:
             user = facade.update_user(user_id, data)
-        except ValueError:
-            return {'message': 'Email already registered'}, 400
+        except ValueError as exc:
+            if str(exc) == 'User not found':
+                return {'message': 'User not found'}, 404
+            return {'message': str(exc)}, 400
+        except TypeError as exc:
+            return {'message': str(exc)}, 400
 
         if not user:
             return {'message': 'User not found'}, 404

@@ -25,6 +25,14 @@ def _serialize_amenity(amenity):
         'name': amenity.name,
     }
 
+def _serialize_review(review):
+    """Serialize a review object for API output."""
+    return {
+        'id': review.id,
+        'text': review.text,
+        'rating': review.rating,
+        'user_id': review.user.id if review.user else None,
+    }
 
 # Define the models for related entities
 amenity_model = api.model('PlaceAmenity', {
@@ -54,9 +62,17 @@ place_model = api.model('Place', {
     'latitude': fields.Float(required=True, description='Latitude of the place'),
     'longitude': fields.Float(required=True, description='Longitude of the place'),
     'owner_id': fields.String(required=True, description='ID of the owner'),
-    'owner': fields.Nested(user_model, description='Owner of the place'),
-    'amenities': fields.List(fields.Nested(amenity_model), description='List of amenities'),
-    'reviews': fields.List(fields.Nested(review_model), description='List of reviews')
+    'amenities': fields.List(fields.String, required=True, description="List of amenities ID's")
+})
+
+place_update_model = api.model('PlaceUpdate', {
+    'title': fields.String(required=False, description='Title of the place'),
+    'description': fields.String(required=False, description='Description of the place'),
+    'price': fields.Float(required=False, description='Price per night'),
+    'latitude': fields.Float(required=False, description='Latitude of the place'),
+    'longitude': fields.Float(required=False, description='Longitude of the place'),
+    'owner_id': fields.String(required=False, description='ID of the owner'),
+    'amenities': fields.List(fields.String, required=False, description="List of amenities ID's")
 })
 
 
@@ -70,7 +86,10 @@ class PlaceList(Resource):
     def post(self):
         """Register a new place"""
         place_data = api.payload
-        new_place = facade.create_place(place_data)
+        try:
+            new_place = facade.create_place(place_data)
+        except (TypeError, ValueError) as exc:
+            return {'message': str(exc)}, 400
         return {
             'id': new_place.id,
             'title': new_place.title,
@@ -118,9 +137,10 @@ class PlaceResource(Resource):
             'longitude': place.longitude,
             'owner': _serialize_owner(place.owner),
             'amenities': [_serialize_amenity(amenity) for amenity in place.amenities],
+            'reviews': [_serialize_review(review) for review in place.reviews],
         }, 200
 
-    @api.expect(place_model, validate=True)
+    @api.expect(place_update_model, validate=True)
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
@@ -130,8 +150,12 @@ class PlaceResource(Resource):
 
         try:
             place = facade.update_place(place_id, data)
-        except ValueError:
-            return {'message': 'Invalid input data'}, 400
+        except ValueError as exc:
+            if str(exc) == 'Place not found':
+                return {'message': 'Place not found'}, 404
+            return {'message': str(exc)}, 400
+        except TypeError as exc:
+            return {'message': str(exc)}, 400
 
         if not place:
             return {'message': 'Place not found'}, 404
