@@ -21,7 +21,10 @@ class AmenityList(Resource):
     def post(self):
         """Register a new amenity"""
         amenity_data = api.payload
-        new_amenity = facade.create_amenity(amenity_data)
+        try:
+            new_amenity = facade.create_amenity(amenity_data)
+        except (TypeError, ValueError) as exc:
+            return {'message': str(exc)}, 400
         return {
             'id': new_amenity.id,
             'name': new_amenity.name,
@@ -67,8 +70,12 @@ class AmenityResource(Resource):
 
         try:
             amenity = facade.update_amenity(amenity_id, data)
-        except ValueError:
-            return {'message': 'Amenity already registered'}, 400
+        except ValueError as exc:
+            if str(exc) == 'Amenity not found':
+                return {'message': 'Amenity not found'}, 404
+            return {'message': str(exc)}, 400
+        except TypeError as exc:
+            return {'message': str(exc)}, 400
 
         if not amenity:
             return {'message': 'Amenity not found'}, 404
