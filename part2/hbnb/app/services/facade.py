@@ -19,11 +19,10 @@ class HBnBFacade:
 
 
 # region Users
+
     def create_user(self, user_data):
         """Create and store a new user."""
-        data = user_data.copy()
-        data.setdefault('password', None)
-        user = User(**data)
+        user = User(**user_data)
         self.user_repo.add(user)
         return user
 
@@ -34,7 +33,7 @@ class HBnBFacade:
     def get_user_by_email(self, email):
         """Retrieve a user by email."""
         return self.user_repo.get_by_attribute('email', email)
-    
+
     def get_all_users(self):
         """Return all users."""
         return self.user_repo.get_all()
@@ -52,15 +51,16 @@ class HBnBFacade:
         return user
 
 # endregion
-        
-        
+
+
 # region Amenities
+
     def create_amenity(self, amenity_data):
         """Create and store a new amenity."""
         amenity = Amenity(**amenity_data)
         self.amenity_repo.add(amenity)
         return amenity
-    
+
     def get_amenity(self, amenity_id):
         """Retrieve an amenity by ID."""
         return self.amenity_repo.get(amenity_id)
@@ -68,7 +68,7 @@ class HBnBFacade:
     def get_all_amenities(self):
         """Return all amenities."""
         return self.amenity_repo.get_all()
-    
+
     def update_amenity(self, amenity_id, amenity_data):
         """Update an existing amenity by ID."""
         amenity = self.get_amenity(amenity_id)
@@ -76,11 +76,12 @@ class HBnBFacade:
             raise ValueError("Amenity not found")
         self.amenity_repo.update(amenity_id, amenity_data)
         return amenity
-    
+
 # endregion
 
 
 # region Places
+
     def create_place(self, place_data):
         """Create and store a new place."""
         owner = place_data.get('owner')
@@ -94,7 +95,8 @@ class HBnBFacade:
 
         amenities = []
         for item in place_data.get('amenities', []):
-            amenity = item if isinstance(item, Amenity) else self.get_amenity(item)
+            amenity = item if isinstance(
+                item, Amenity) else self.get_amenity(item)
             if not amenity:
                 raise ValueError("Amenity not found")
             amenities.append(amenity)
@@ -137,7 +139,8 @@ class HBnBFacade:
         if 'amenities' in data:
             resolved = []
             for item in data['amenities']:
-                amenity = item if isinstance(item, Amenity) else self.get_amenity(item)
+                amenity = item if isinstance(
+                    item, Amenity) else self.get_amenity(item)
                 if not amenity:
                     raise ValueError("Amenity not found")
                 resolved.append(amenity)
@@ -148,8 +151,9 @@ class HBnBFacade:
 
 # endregion
 
-        
+
 # region Reviews
+
     def create_review(self, review_data):
         """Create and store a new review."""
         user = review_data.get('user')
@@ -202,7 +206,7 @@ class HBnBFacade:
             raise ValueError("Review not found")
         self.review_repo.update(review_id, review_data)
         return review
-    
+
     def delete_review(self, review_id):
         """Delete a review by ID."""
         review = self.get_review(review_id)
