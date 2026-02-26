@@ -24,6 +24,9 @@ class User(BaseModel):
         """Set and validate the user's first name."""
         if not isinstance(first_name, str):
             raise TypeError("First name must be a string.")
+        first_name = first_name.strip()
+        if not first_name:
+            raise ValueError("First name cannot be empty.")
         if len(first_name) > 50:
             raise ValueError("First name cannot exceed 50 characters.")
         self._first_name = first_name
@@ -38,6 +41,9 @@ class User(BaseModel):
         """Set and validate the user's last name."""
         if not isinstance(last_name, str):
             raise TypeError("Last name must be a string.")
+        last_name = last_name.strip()
+        if not last_name:
+            raise ValueError("Last name cannot be empty.")
         if len(last_name) > 50:
             raise ValueError("Last name cannot exceed 50 characters.")
         self._last_name = last_name
@@ -52,6 +58,9 @@ class User(BaseModel):
         """Set and validate the user's email."""
         if not isinstance(email, str):
             raise TypeError("Email must be a string.")
+        email = email.strip()
+        if not email:
+            raise ValueError("Email cannot be empty.")
         try:
             validate_email(email)
         except EmailNotValidError:

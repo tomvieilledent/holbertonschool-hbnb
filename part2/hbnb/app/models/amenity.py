@@ -21,6 +21,9 @@ class Amenity(BaseModel):
         """Set and validate the amenity name."""
         if not isinstance(name, str):
             raise TypeError("Amenity name must be a string.")
+        name = name.strip()
+        if not name:
+            raise ValueError("Amenity name cannot be empty.")
         if len(name) > 50:
             raise ValueError("Amenity name cannot exceed 50 characters.")
         self._name = name

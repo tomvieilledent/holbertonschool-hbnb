@@ -27,6 +27,9 @@ class Place(BaseModel):
         """Set and validate the place title."""
         if not isinstance(title, str):
             raise TypeError("Title must be a string.")
+        title = title.strip()
+        if not title:
+            raise ValueError("Title cannot be empty.")
         if len(title) > 100:
             raise ValueError("Title cannot exceed 100 characters.")
         self._title = title
@@ -44,6 +47,9 @@ class Place(BaseModel):
             return
         if not isinstance(description, str):
             raise TypeError("Description must be a string.")
+        description = description.strip()
+        if not description:
+            raise ValueError("Description cannot be empty.")
         self._description = description
 
     @property
