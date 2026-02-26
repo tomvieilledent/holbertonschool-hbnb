@@ -21,7 +21,9 @@ class HBnBFacade:
 # region Users
     def create_user(self, user_data):
         """Create and store a new user."""
-        user = User(**user_data)
+        data = user_data.copy()
+        data.setdefault('password', None)
+        user = User(**data)
         self.user_repo.add(user)
         return user
 
@@ -42,6 +44,10 @@ class HBnBFacade:
         user = self.get_user(user_id)
         if not user:
             raise ValueError("User not found")
+        if 'email' in user_data:
+            existing_user = self.get_user_by_email(user_data['email'])
+            if existing_user and existing_user.id != user_id:
+                raise ValueError("Email already registered")
         self.user_repo.update(user_id, user_data)
         return user
 
@@ -77,7 +83,31 @@ class HBnBFacade:
 # region Places
     def create_place(self, place_data):
         """Create and store a new place."""
-        place = Place(**place_data)
+        owner = place_data.get('owner')
+        if not owner:
+            owner_id = place_data.get('owner_id')
+            if not owner_id:
+                raise ValueError("Owner is required")
+            owner = self.get_user(owner_id)
+            if not owner:
+                raise ValueError("User not found")
+
+        amenities = []
+        for item in place_data.get('amenities', []):
+            amenity = item if isinstance(item, Amenity) else self.get_amenity(item)
+            if not amenity:
+                raise ValueError("Amenity not found")
+            amenities.append(amenity)
+
+        place = Place(
+            title=place_data.get('title'),
+            description=place_data.get('description'),
+            price=place_data.get('price'),
+            latitude=place_data.get('latitude'),
+            longitude=place_data.get('longitude'),
+            owner=owner,
+        )
+        place.amenities = amenities
         self.place_repo.add(place)
         return place
 
@@ -94,7 +124,26 @@ class HBnBFacade:
         place = self.get_place(place_id)
         if not place:
             raise ValueError("Place not found")
-        self.place_repo.update(place_id, place_data)
+
+        data = place_data.copy()
+
+        if 'owner_id' in data:
+            owner = self.get_user(data['owner_id'])
+            if not owner:
+                raise ValueError("User not found")
+            data['owner'] = owner
+            del data['owner_id']
+
+        if 'amenities' in data:
+            resolved = []
+            for item in data['amenities']:
+                amenity = item if isinstance(item, Amenity) else self.get_amenity(item)
+                if not amenity:
+                    raise ValueError("Amenity not found")
+                resolved.append(amenity)
+            data['amenities'] = resolved
+
+        self.place_repo.update(place_id, data)
         return place
 
 # endregion
@@ -103,7 +152,31 @@ class HBnBFacade:
 # region Reviews
     def create_review(self, review_data):
         """Create and store a new review."""
-        review = Review(**review_data)
+        user = review_data.get('user')
+        if not user:
+            user_id = review_data.get('user_id')
+            if not user_id:
+                raise ValueError("User is required")
+            user = self.get_user(user_id)
+            if not user:
+                raise ValueError("User not found")
+
+        place = review_data.get('place')
+        if not place:
+            place_id = review_data.get('place_id')
+            if not place_id:
+                raise ValueError("Place is required")
+            place = self.get_place(place_id)
+            if not place:
+                raise ValueError("Place not found")
+
+        review = Review(
+            text=review_data.get('text'),
+            rating=review_data.get('rating'),
+            place=place,
+            user=user,
+        )
+        place.add_review(review)
         self.review_repo.add(review)
         return review
 
