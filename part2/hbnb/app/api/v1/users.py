@@ -24,13 +24,17 @@ user_update_model = api.model('UserUpdate', {
 class UserList(Resource):
     """Collection endpoints for users."""
 
-    @api.expect(user_model, validate=True)
+    @api.expect(user_model)
     @api.response(201, 'User successfully created')
     @api.response(400, 'Email already registered')
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new user"""
         user_data = api.payload
+
+        # Validate required fields
+        if not user_data or 'email' not in user_data:
+            return {'message': 'Invalid input data'}, 400
 
         existing_user = facade.get_user_by_email(user_data['email'])
         if existing_user:
@@ -81,7 +85,7 @@ class UserResource(Resource):
             'email': user.email
         }, 200
 
-    @api.expect(user_update_model, validate=True)
+    @api.expect(user_update_model)
     @api.response(200, 'User updated successfully')
     @api.response(404, 'User not found')
     @api.response(400, 'Email already registered')
