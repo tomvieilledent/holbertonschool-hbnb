@@ -5,13 +5,12 @@ from email_validator import validate_email, EmailNotValidError
 class User(BaseModel):
     """User entity with identity and email validation."""
 
-    def __init__(self, first_name, last_name, email, password, is_admin=False):
+    def __init__(self, first_name, last_name, email, is_admin=False):
         """Create a user instance."""
         super().__init__()
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self.password = password
         self.is_admin = bool(is_admin)
 
     @property
@@ -62,7 +61,7 @@ class User(BaseModel):
         if not email:
             raise ValueError("Email cannot be empty.")
         try:
-            validate_email(email)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
         self._email = email
