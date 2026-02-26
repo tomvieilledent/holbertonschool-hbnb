@@ -25,6 +25,7 @@ def _serialize_amenity(amenity):
         'name': amenity.name,
     }
 
+
 def _serialize_review(review):
     """Serialize a review object for API output."""
     return {
@@ -33,6 +34,7 @@ def _serialize_review(review):
         'rating': review.rating,
         'user_id': review.user.id if review.user else None,
     }
+
 
 # Define the models for related entities
 amenity_model = api.model('PlaceAmenity', {
@@ -80,12 +82,13 @@ place_update_model = api.model('PlaceUpdate', {
 class PlaceList(Resource):
     """Collection endpoints for places."""
 
-    @api.expect(place_model, validate=True)
+    @api.expect(place_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
     def post(self):
         """Register a new place"""
         place_data = api.payload
+
         try:
             new_place = facade.create_place(place_data)
         except (TypeError, ValueError) as exc:
@@ -140,7 +143,7 @@ class PlaceResource(Resource):
             'reviews': [_serialize_review(review) for review in place.reviews],
         }, 200
 
-    @api.expect(place_update_model, validate=True)
+    @api.expect(place_update_model)
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')

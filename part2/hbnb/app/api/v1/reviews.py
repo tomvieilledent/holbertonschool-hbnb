@@ -46,7 +46,7 @@ def _serialize_place(place):
 class ReviewList(Resource):
     """Collection endpoints for reviews."""
 
-    @api.expect(review_model, validate=True)
+    @api.expect(review_model)
     @api.response(201, 'Review successfully created')
     @api.response(400, 'Invalid input data')
     def post(self):
@@ -79,7 +79,7 @@ class ReviewList(Resource):
                 'user_id': review.user.id,
                 'place_id': review.place.id
             }, 201
-        except ValueError as e:
+        except (TypeError, ValueError) as e:
             return {'message': str(e)}, 400
 
     @api.response(200, 'List of reviews retrieved successfully')
@@ -116,7 +116,7 @@ class ReviewResource(Resource):
             'place_id': review.place.id
         }, 200
 
-    @api.expect(review_update_model, validate=True)
+    @api.expect(review_update_model)
     @api.response(200, 'Review updated successfully')
     @api.response(404, 'Review not found')
     @api.response(400, 'Invalid input data')
@@ -137,8 +137,8 @@ class ReviewResource(Resource):
         try:
             updated_review = facade.update_review(review_id, update_data)
             return {'message': 'Review updated successfully'}, 200
-        except ValueError as e:
-            return {'message': str(e)}, 404
+        except (TypeError, ValueError) as e:
+            return {'message': str(e)}, 400
 
     @api.response(200, 'Review deleted successfully')
     @api.response(404, 'Review not found')
