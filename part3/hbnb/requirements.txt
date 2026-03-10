@@ -1,4 +1,5 @@
 flask
 flask-restx
+Flask-SQLAlchemy
 jsonschema>=4.18.0
 email-validator
