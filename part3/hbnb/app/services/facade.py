@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-from app.persistence.repository import InMemoryRepository
+from app.persistence.user_repository import UserRepository
+from app.persistence.repository import SQLAlchemyRepository
 from app.models.user import User
 from app.models.amenity import Amenity
 from app.models.place import Place
@@ -12,10 +13,10 @@ class HBnBFacade:
 
     def __init__(self):
         """Initialize in-memory repositories for all entities."""
-        self.user_repo = InMemoryRepository()
-        self.place_repo = InMemoryRepository()
-        self.review_repo = InMemoryRepository()
-        self.amenity_repo = InMemoryRepository()
+        self.user_repo = UserRepository()
+        self.place_repository = SQLAlchemyRepository(Place)
+        self.review_repository = SQLAlchemyRepository(Review)
+        self.amenity_repository = SQLAlchemyRepository(Amenity)
 
 
 # region Users
@@ -23,20 +24,21 @@ class HBnBFacade:
     def create_user(self, user_data):
         """Create and store a new user."""
         user = User(**user_data)
-        self.user_repo.add(user)
+        user.hash_password(user_data['password'])
+        self.user_repository.add(user)
         return user
 
     def get_user(self, user_id):
         """Retrieve a user by ID."""
-        return self.user_repo.get(user_id)
+        return self.user_repository.get(user_id)
 
     def get_user_by_email(self, email):
         """Retrieve a user by email."""
-        return self.user_repo.get_by_attribute('email', email)
+        return self.user_repository.get_by_attribute('email', email)
 
     def get_all_users(self):
         """Return all users."""
-        return self.user_repo.get_all()
+        return self.user_repository.get_all()
 
     def update_user(self, user_id, user_data):
         """Update an existing user by ID."""
@@ -47,7 +49,7 @@ class HBnBFacade:
             existing_user = self.get_user_by_email(user_data['email'])
             if existing_user and existing_user.id != user_id:
                 raise ValueError("Email already registered")
-        self.user_repo.update(user_id, user_data)
+        self.user_repository.update(user_id, user_data)
         return user
 
 # endregion
@@ -58,23 +60,23 @@ class HBnBFacade:
     def create_amenity(self, amenity_data):
         """Create and store a new amenity."""
         amenity = Amenity(**amenity_data)
-        self.amenity_repo.add(amenity)
+        self.amenity_repository.add(amenity)
         return amenity
 
     def get_amenity(self, amenity_id):
         """Retrieve an amenity by ID."""
-        return self.amenity_repo.get(amenity_id)
+        return self.amenity_repository.get(amenity_id)
 
     def get_all_amenities(self):
         """Return all amenities."""
-        return self.amenity_repo.get_all()
+        return self.amenity_repository.get_all()
 
     def update_amenity(self, amenity_id, amenity_data):
         """Update an existing amenity by ID."""
         amenity = self.get_amenity(amenity_id)
         if not amenity:
             raise ValueError("Amenity not found")
-        self.amenity_repo.update(amenity_id, amenity_data)
+        self.amenity_repository.update(amenity_id, amenity_data)
         return amenity
 
 # endregion
@@ -110,16 +112,16 @@ class HBnBFacade:
             owner=owner,
         )
         place.amenities = amenities
-        self.place_repo.add(place)
+        self.place_repository.add(place)
         return place
 
     def get_place(self, place_id):
         """Retrieve a place by ID."""
-        return self.place_repo.get(place_id)
+        return self.place_repository.get(place_id)
 
     def get_all_places(self):
         """Return all places."""
-        return self.place_repo.get_all()
+        return self.place_repository.get_all()
 
     def update_place(self, place_id, place_data):
         """Update an existing place by ID."""
@@ -146,7 +148,7 @@ class HBnBFacade:
                 resolved.append(amenity)
             data['amenities'] = resolved
 
-        self.place_repo.update(place_id, data)
+        self.place_repository.update(place_id, data)
         return place
 
 # endregion
@@ -181,21 +183,21 @@ class HBnBFacade:
             user=user,
         )
         place.add_review(review)
-        self.review_repo.add(review)
+        self.review_repository.add(review)
         return review
 
     def get_review(self, review_id):
         """Retrieve a review by ID."""
-        return self.review_repo.get(review_id)
+        return self.review_repository.get(review_id)
 
     def get_all_reviews(self):
         """Return all reviews."""
-        return self.review_repo.get_all()
+        return self.review_repository.get_all()
 
     def get_reviews_by_place(self, place_id):
         """Return all reviews linked to a place ID."""
         return [
-            review for review in self.review_repo.get_all()
+            review for review in self.review_repository.get_all()
             if review.place and review.place.id == place_id
         ]
 
@@ -204,7 +206,7 @@ class HBnBFacade:
         review = self.get_review(review_id)
         if not review:
             raise ValueError("Review not found")
-        self.review_repo.update(review_id, review_data)
+        self.review_repository.update(review_id, review_data)
         return review
 
     def delete_review(self, review_id):
@@ -212,6 +214,6 @@ class HBnBFacade:
         review = self.get_review(review_id)
         if not review:
             raise ValueError("Review not found")
-        self.review_repo.delete(review_id)
+        self.review_repository.delete(review_id)
 
 # endregion
