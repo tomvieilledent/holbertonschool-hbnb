@@ -30,6 +30,16 @@ class User(BaseModel):
         db.Boolean,
         default=False)
     
+    places = db.relationship(
+        "Place",
+        back_populates="owner",
+        cascade="all, delete-orphan")
+
+    reviews = db.relationship(
+        "Review",
+        back_populates="user",
+        cascade="all, delete-orphan")
+    
 
     def __init__(self, first_name, last_name, email, password=None, is_admin=False):
         """Create a user instance."""

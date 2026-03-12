@@ -9,7 +9,7 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     id = db.Column(
-        db.Integer, 
+        db.String(36), 
         primary_key=True, 
         default=lambda: str(uuid.uuid4()))
     
@@ -21,6 +21,7 @@ class BaseModel(db.Model):
         db.DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc))
+
 
     def __init__(self):
         """Initialize base fields for a new model instance."""
