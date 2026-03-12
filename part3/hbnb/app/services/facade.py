@@ -13,7 +13,7 @@ class HBnBFacade:
 
     def __init__(self):
         """Initialize in-memory repositories for all entities."""
-        self.user_repo = UserRepository()
+        self.user_repository = UserRepository()
         self.place_repository = SQLAlchemyRepository(Place)
         self.review_repository = SQLAlchemyRepository(Review)
         self.amenity_repository = SQLAlchemyRepository(Amenity)
@@ -24,7 +24,6 @@ class HBnBFacade:
     def create_user(self, user_data):
         """Create and store a new user."""
         user = User(**user_data)
-        user.hash_password(user_data['password'])
         self.user_repository.add(user)
         return user
 
@@ -34,7 +33,7 @@ class HBnBFacade:
 
     def get_user_by_email(self, email):
         """Retrieve a user by email."""
-        return self.user_repository.get_by_attribute('email', email)
+        return self.user_repository.get_user_by_email(email)
 
     def get_all_users(self):
         """Return all users."""
