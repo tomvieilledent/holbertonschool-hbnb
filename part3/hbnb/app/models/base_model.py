@@ -9,7 +9,7 @@ class BaseModel(db.Model):
     __abstract__ = True
 
     id = db.Column(
-        db.String(36), 
+        db.Integer, 
         primary_key=True, 
         default=lambda: str(uuid.uuid4()))
     

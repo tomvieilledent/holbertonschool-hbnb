@@ -1,9 +1,34 @@
+from app import db
+from decimal import Decimal, InvalidOperation
 from app.models.base_model import BaseModel
 from app.models.user import User
 
 
 class Place(BaseModel):
     """Place entity with location, owner, and relations."""
+
+    __tablename__ = 'places'
+
+    _title = db.Column(
+        db.String(100),
+        nullable=False)
+    
+    _description = db.Column(
+        db.String(2000),
+        nullable=False)
+    
+    _price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False)
+    
+    _latitude = db.Column(
+        db.Float,
+        nullable=False)
+    
+    _longitude = db.Column(
+        db.Float,
+        nullable=False)
+
 
     def __init__(self, title, description, price, latitude, longitude, owner):
         """Create a place instance."""
@@ -17,6 +42,8 @@ class Place(BaseModel):
         self.reviews = []
         self.amenities = []
 
+
+#region Title
     @property
     def title(self):
         """Return the place title."""
@@ -33,7 +60,10 @@ class Place(BaseModel):
         if len(title) > 100:
             raise ValueError("Title cannot exceed 100 characters.")
         self._title = title
+#endregion
 
+
+#region Description
     @property
     def description(self):
         """Return the place description."""
@@ -42,16 +72,18 @@ class Place(BaseModel):
     @description.setter
     def description(self, description):
         """Set and validate the place description."""
-        if description is None:
-            self._description = None
-            return
         if not isinstance(description, str):
             raise TypeError("Description must be a string.")
         description = description.strip()
         if not description:
             raise ValueError("Description cannot be empty.")
+        if len(description) > 2000:
+            raise ValueError("Description cannot exceed 2000 characters.")
         self._description = description
+#endregion
 
+
+#region Price
     @property
     def price(self):
         """Return the nightly price."""
@@ -60,12 +92,19 @@ class Place(BaseModel):
     @price.setter
     def price(self, price):
         """Set and validate the nightly price."""
-        if not isinstance(price, (int, float)):
-            raise TypeError("Price must be a float.")
-        if price < 0:
+        try:
+            price = Decimal(str(price)).quantize(Decimal('0.01'))
+        except (InvalidOperation, TypeError):
+            raise TypeError("Price must be a valid number.")
+        if price <= 0:
             raise ValueError("Price must be positive.")
-        self._price = float(price)
+        if price > Decimal('99999999.99'):
+            raise ValueError("Price exceeds maximum allowed value.")
+        self._price = price
+#endregion
 
+
+#region Latitude
     @property
     def latitude(self):
         """Return the latitude."""
@@ -79,7 +118,10 @@ class Place(BaseModel):
         if not (-90 <= float(latitude) <= 90):
             raise ValueError("Latitude must be in range -90 : 90.")
         self._latitude = float(latitude)
+#endregion
 
+
+#region Longitude
     @property
     def longitude(self):
         """Return the longitude."""
@@ -93,7 +135,10 @@ class Place(BaseModel):
         if not (-180 <= float(longitude) <= 180):
             raise ValueError("Longitude must be in range -180 : 180.")
         self._longitude = float(longitude)
+#endregion
 
+
+#region Owner
     @property
     def owner(self):
         """Return the place owner."""
@@ -113,3 +158,4 @@ class Place(BaseModel):
     def add_amenity(self, amenity):
         """Add an amenity to the place."""
         self.amenities.append(amenity)
+#endregion
