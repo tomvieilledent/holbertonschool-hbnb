@@ -1,16 +1,26 @@
 #!/usr/bin/python3
 
+from app import db
 from app.models.base_model import BaseModel
 
 
 class Amenity(BaseModel):
     """Amenity entity for place features."""
 
+    __tablename__ = 'amenities'
+
+    _name = db.Column(
+        db.String(50),
+        nullable=False)
+
+
     def __init__(self, name):
         """Create an amenity instance."""
         super().__init__()
         self.name = name
 
+
+#region Name
     @property
     def name(self):
         """Return the amenity name."""
@@ -27,3 +37,4 @@ class Amenity(BaseModel):
         if len(name) > 50:
             raise ValueError("Amenity name cannot exceed 50 characters.")
         self._name = name
+#endregion

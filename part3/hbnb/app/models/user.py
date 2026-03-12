@@ -9,11 +9,27 @@ class User(BaseModel):
 
     __tablename__ = 'users'
 
-    _first_name = db.Column(db.String(50), nullable=False)
-    _last_name = db.Column(db.String(50), nullable=False)
-    _email = db.Column(db.String(120), nullable=False, unique=True)
-    password = db.Column(db.String(128), nullable=False)
-    is_admin = db.Column(db.Boolean, default=False)
+    _first_name = db.Column(
+        db.String(50),
+        nullable=False)
+    
+    _last_name = db.Column(
+        db.String(50),
+        nullable=False)
+    
+    _email = db.Column(
+        db.String(120),
+        nullable=False,
+        unique=True)
+    
+    password = db.Column(
+        db.String(128),
+        nullable=False)
+    
+    is_admin = db.Column(
+        db.Boolean,
+        default=False)
+    
 
     def __init__(self, first_name, last_name, email, password=None, is_admin=False):
         """Create a user instance."""
@@ -21,12 +37,13 @@ class User(BaseModel):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self._is_admin = bool(is_admin)
+        self.is_admin = bool(is_admin)
         self._password = ""
         if password:
             self.set_password(password)
     
 
+#region First name
     @property
     def first_name(self):
         """Return the user's first name."""
@@ -43,7 +60,10 @@ class User(BaseModel):
         if len(first_name) > 50:
             raise ValueError("First name cannot exceed 50 characters.")
         self._first_name = first_name
+#endregion
 
+
+#region Last name
     @property
     def last_name(self):
         """Return the user's last name."""
@@ -60,7 +80,10 @@ class User(BaseModel):
         if len(last_name) > 50:
             raise ValueError("Last name cannot exceed 50 characters.")
         self._last_name = last_name
+#endregion
 
+
+#region Email
     @property
     def email(self):
         """Return the user's email."""
@@ -79,3 +102,4 @@ class User(BaseModel):
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
         self._email = email
+#endregion
