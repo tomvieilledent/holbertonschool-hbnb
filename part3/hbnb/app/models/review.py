@@ -17,12 +17,34 @@ class Review(BaseModel):
         db.Integer,
         nullable=False)
 
+    place_id = db.Column(
+        db.String(36),
+        db.ForeignKey("places.id"),
+        nullable=False)
+
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("users.id"),
+        nullable=False)
+
+    place = db.relationship(
+        "Place",
+        back_populates="reviews")
+
+    user = db.relationship(
+        "User",
+        back_populates="reviews")
+
 
     def __init__(self, text, rating, place, user):
         """Create a review instance."""
         super().__init__()
         self.text = text
         self.rating = rating
+        if not isinstance(place, Place):
+            raise TypeError("Place is required.")
+        if not isinstance(user, User):
+            raise TypeError("User is required.")
         self.place = place
         self.user = user
 
@@ -64,31 +86,3 @@ class Review(BaseModel):
 #endregion
 
 
-#region Place
-    @property
-    def place(self):
-        """Return the reviewed place."""
-        return self._place
-
-    @place.setter
-    def place(self, place):
-        """Set and validate the reviewed place."""
-        if not isinstance(place, Place):
-            raise TypeError("Place is required.")
-        self._place = place
-#endregion
-
-
-#region User
-    @property
-    def user(self):
-        """Return the review author."""
-        return self._user
-
-    @user.setter
-    def user(self, user):
-        """Set and validate the review author."""
-        if not isinstance(user, User):
-            raise TypeError("User is required.")
-        self._user = user
-#endregion

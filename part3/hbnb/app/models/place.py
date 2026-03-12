@@ -2,6 +2,14 @@ from app import db
 from decimal import Decimal, InvalidOperation
 from app.models.base_model import BaseModel
 from app.models.user import User
+from sqlalchemy.orm import relationship
+
+
+place_amenity = db.Table(
+    "place_amenity",
+    db.Column("place_id", db.String(36), db.ForeignKey("places.id"), primary_key=True),
+    db.Column("amenity_id", db.String(36), db.ForeignKey("amenities.id"), primary_key=True)
+)
 
 
 class Place(BaseModel):
@@ -28,7 +36,27 @@ class Place(BaseModel):
     _longitude = db.Column(
         db.Float,
         nullable=False)
+    
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("users.id"),
+        nullable=False)
+    
+    owner = db.relationship(
+        "User",
+        back_populates="places")
 
+    reviews = db.relationship(
+        "Review",
+        back_populates="place",
+        cascade="all, delete-orphan")
+
+    amenities = db.relationship(
+        "Amenity",
+        secondary=place_amenity,
+        back_populates="places",
+        lazy="subquery")
+    
 
     def __init__(self, title, description, price, latitude, longitude, owner):
         """Create a place instance."""
@@ -38,9 +66,9 @@ class Place(BaseModel):
         self.price = price
         self.latitude = latitude
         self.longitude = longitude
+        if not isinstance(owner, User):
+            raise TypeError("Owner must be a User.")
         self.owner = owner
-        self.reviews = []
-        self.amenities = []
 
 
 #region Title
@@ -138,19 +166,6 @@ class Place(BaseModel):
 #endregion
 
 
-#region Owner
-    @property
-    def owner(self):
-        """Return the place owner."""
-        return self._owner
-
-    @owner.setter
-    def owner(self, owner):
-        """Set and validate the place owner."""
-        if not isinstance(owner, User):
-            raise TypeError("Owner must be an user.")
-        self._owner = owner
-
     def add_review(self, review):
         """Add a review to the place."""
         self.reviews.append(review)
@@ -158,4 +173,3 @@ class Place(BaseModel):
     def add_amenity(self, amenity):
         """Add an amenity to the place."""
         self.amenities.append(amenity)
-#endregion

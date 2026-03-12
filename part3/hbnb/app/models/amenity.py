@@ -13,6 +13,12 @@ class Amenity(BaseModel):
         db.String(50),
         nullable=False)
 
+    places = db.relationship(
+        "Place",
+        secondary="place_amenity",
+        back_populates="amenities",
+        lazy="subquery")
+
 
     def __init__(self, name):
         """Create an amenity instance."""
