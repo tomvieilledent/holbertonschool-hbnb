@@ -1,8 +1,7 @@
-from app import db
+from app import db, bcrypt
 from app.models.base_model import BaseModel
 from email_validator import validate_email, EmailNotValidError
 
-###Il manque le set_password###
 
 class User(BaseModel):
     """User entity with identity and email validation."""
@@ -21,11 +20,14 @@ class User(BaseModel):
         self.first_name = first_name
         self.last_name = last_name
         self.email = email
-        self._is_admin = bool(is_admin)
-        self._password = ""
+        self.is_admin = bool(is_admin)
+        self.password = ""
         if password:
             self.set_password(password)
-    
+
+    def set_password(self, password):
+        """Set a hashed password"""
+        self.hash_password(password)
 
     @property
     def first_name(self):
@@ -79,3 +81,11 @@ class User(BaseModel):
         except EmailNotValidError:
             raise TypeError("Invalid email address format.")
         self._email = email
+
+    def hash_password(self, password):
+        """Hashes the password before storing it."""
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def verify_password(self, password):
+        """Verifies if the provided password matches the hashed password."""
+        return bcrypt.check_password_hash(self.password, password)
