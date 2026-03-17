@@ -257,3 +257,30 @@ Le fichier de tests couvre les cas principaux :
 
 Florian Roosebeke
 Tom Vieilledent
+
+### créer un admin ###
+source venv/bin/activate
+python3 - <<'PY'
+from app import create_app, db
+from app.services import facade
+
+app = create_app()
+
+with app.app_context():
+    email = "admin@example.com"
+    user = facade.get_user_by_email(email)
+
+    if user:
+        user.is_admin = True
+        db.session.commit()
+        print("Utilisateur existant promu admin:", email)
+    else:
+        user = facade.create_user({
+            "first_name": "Super",
+            "last_name": "Admin",
+            "email": email,
+            "password": "Admin1234!",
+            "is_admin": True
+        })
+        print("Admin cree:", user.id, email)
+PY
