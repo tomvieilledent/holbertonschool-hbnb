@@ -16,19 +16,24 @@ def create_app(config_class="config.DevelopmentConfig"):
     app = Flask(__name__)
     app.config.from_object(config_class)
     db.init_app(app)
-
     authorizations = {
-        'Bearer': {
+        'BearerAuth': {
             'type': 'apiKey',
             'in': 'header',
             'name': 'Authorization',
-            'description': 'Format: Bearer <JWT_TOKEN>'
+            'description': 'JWT token: Bearer <token>'
         }
     }
 
-    api = Api(app, version='1.0', title='HBnB API',
-              description='HBnB Application API', doc='/',
-              authorizations=authorizations)
+    api = Api(
+        app,
+        version="1.0",
+        title="HBnB API",
+        description="HBnB Application API",
+        doc="/",
+        authorizations=authorizations,
+        security='BearerAuth'
+    )
 
     # Register API namespaces
     from app.api.v1.users import api as users_ns
