@@ -98,7 +98,7 @@ class PlaceList(Resource):
             'id': new_place.id,
             'title': new_place.title,
             'description': new_place.description,
-            'price': new_place.price,
+            'price': _serialize_price(new_place.price),
             'latitude': new_place.latitude,
             'longitude': new_place.longitude,
             'owner_id': new_place.owner.id if new_place.owner else None,
@@ -113,7 +113,7 @@ class PlaceList(Resource):
             {
                 'id': u.id,
                 'title': u.title,
-                'price': u.price,
+                'price': _serialize_price(u.price),
             }
             for u in places
         ], 200
@@ -135,7 +135,7 @@ class PlaceResource(Resource):
             'id': place.id,
             'title': place.title,
             'description': place.description,
-            'price': place.price,
+            'price': _serialize_price(place.price),
             'latitude': place.latitude,
             'longitude': place.longitude,
             'owner': _serialize_owner(place.owner),
@@ -182,7 +182,7 @@ class PlaceResource(Resource):
             'id': place.id,
             'title': place.title,
             'description': place.description,
-            'price': place.price,
+            'price': _serialize_price(place.price),
             'latitude': place.latitude,
             'longitude': place.longitude,
             'owner_id': place.owner.id if place.owner else None,
