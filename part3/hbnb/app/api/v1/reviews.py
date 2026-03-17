@@ -67,7 +67,7 @@ class ReviewList(Resource):
 
         existing_reviews = facade.get_reviews_by_place(data['place_id'])
         if any(str(r.user.id) == str(current_user) for r in existing_reviews):
-            return {'message': 'You have already reviewed this place'}, 400
+            return {'message': 'You have already reviewed this place.'}, 400
 
         user = facade.get_user(current_user)
         if not user:

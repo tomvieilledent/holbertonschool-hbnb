@@ -110,7 +110,7 @@ class UserResource(Resource):
             # Non-admin users cannot change email or password.
             for field in forbidden_fields:
                 if field in data:
-                    return {'error': f"Field '{field}' cannot be updated"}, 400
+                    return {'message': 'You cannot modify email or password.'}, 400
 
         try:
             user = facade.update_user(user_id, data)
