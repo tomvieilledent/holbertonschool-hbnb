@@ -2,7 +2,7 @@
 
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 api = Namespace('reviews', description='Review operations')
 
@@ -139,7 +139,11 @@ class ReviewResource(Resource):
             return {'message': 'Review not found'}, 404
 
         current_user = get_jwt_identity()
-        if not review.user or str(review.user.id) != str(current_user):
+        current_user_claims = get_jwt()
+        is_admin = current_user_claims.get('is_admin', False)
+        
+        # Admins can modify any review; non-admins can only modify their own
+        if not is_admin and (not review.user or str(review.user.id) != str(current_user)):
             return {'message': 'Unauthorized action.'}, 403
 
         data = api.payload or {}
@@ -169,8 +173,11 @@ class ReviewResource(Resource):
             return {'message': 'Review not found'}, 404
 
         current_user = get_jwt_identity()
-
-        if not review.user or str(review.user.id) != str(current_user):
+        current_user_claims = get_jwt()
+        is_admin = current_user_claims.get('is_admin', False)
+        
+        # Admins can delete any review; non-admins can only delete their own
+        if not is_admin and (not review.user or str(review.user.id) != str(current_user)):
             return {'message': 'Unauthorized action.'}, 403
 
         try:
