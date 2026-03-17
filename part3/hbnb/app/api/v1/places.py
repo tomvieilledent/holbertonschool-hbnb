@@ -2,6 +2,7 @@
 
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 
 api = Namespace('places', description='Place operations')
 
@@ -63,7 +64,6 @@ place_model = api.model('Place', {
     'price': fields.Float(required=True, description='Price per night'),
     'latitude': fields.Float(required=True, description='Latitude of the place'),
     'longitude': fields.Float(required=True, description='Longitude of the place'),
-    'owner_id': fields.String(required=True, description='ID of the owner'),
     'amenities': fields.List(fields.String, required=True, description="List of amenities ID's")
 })
 
@@ -73,7 +73,6 @@ place_update_model = api.model('PlaceUpdate', {
     'price': fields.Float(required=False, description='Price per night'),
     'latitude': fields.Float(required=False, description='Latitude of the place'),
     'longitude': fields.Float(required=False, description='Longitude of the place'),
-    'owner_id': fields.String(required=False, description='ID of the owner'),
     'amenities': fields.List(fields.String, required=False, description="List of amenities ID's")
 })
 
@@ -85,10 +84,12 @@ class PlaceList(Resource):
     @api.expect(place_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def post(self):
         """Register a new place"""
+        current_user = get_jwt_identity()
         place_data = api.payload
-
+        place_data["owner_id"] = current_user
         try:
             new_place = facade.create_place(place_data)
         except (TypeError, ValueError) as exc:
@@ -112,8 +113,7 @@ class PlaceList(Resource):
             {
                 'id': u.id,
                 'title': u.title,
-                'latitude': u.latitude,
-                'longitude': u.longitude,
+                'price': u.price,
             }
             for u in places
         ], 200
@@ -147,9 +147,24 @@ class PlaceResource(Resource):
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def put(self, place_id):
         """Update a place's information"""
-        data = api.payload
+        data = api.payload or {}
+        current_user_id = get_jwt_identity()
+        current_user_claims = get_jwt()
+        is_admin = current_user_claims.get('is_admin', False)
+
+        place = facade.get_place(place_id)
+        if not place:
+            return {'message': 'Place not found'}, 404
+
+        if not is_admin and (not place.owner or str(place.owner.id) != str(current_user_id)):
+            return {'message': 'Unauthorized action.'}, 403
+
+        # Owner must come from auth context, never from request payload.
+        if data and 'owner_id' in data:
+            del data['owner_id']
 
         try:
             place = facade.update_place(place_id, data)

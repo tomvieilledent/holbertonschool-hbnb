@@ -22,7 +22,6 @@ class BaseModel(db.Model):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc))
 
-
     def __init__(self):
         """Initialize base fields for a new model instance."""
         self.id = str(uuid.uuid4())
