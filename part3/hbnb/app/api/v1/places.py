@@ -7,6 +7,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 api = Namespace('places', description='Place operations')
 
 
+def _serialize_price(price):
+    """Convert Decimal-backed prices to JSON-friendly floats."""
+    return float(price) if price is not None else None
+
+
 def _serialize_owner(owner):
     """Serialize an owner object for API output."""
     if not owner:

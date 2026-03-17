@@ -44,11 +44,19 @@ class HBnBFacade:
         user = self.get_user(user_id)
         if not user:
             raise ValueError("User not found")
-        if 'email' in user_data:
-            existing_user = self.get_user_by_email(user_data['email'])
+        data = (user_data or {}).copy()
+
+        if 'email' in data:
+            existing_user = self.get_user_by_email(data['email'])
             if existing_user and existing_user.id != user_id:
                 raise ValueError("Email already registered")
-        self.user_repository.update(user_id, user_data)
+
+        if 'password' in data:
+            user.set_password(data['password'])
+            del data['password']
+
+        if data:
+            self.user_repository.update(user_id, data)
         return user
 
 # endregion

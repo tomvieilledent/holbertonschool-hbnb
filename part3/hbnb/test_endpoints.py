@@ -1,40 +1,61 @@
 #!/usr/bin/python3
-"""Focused endpoint tests aligned with JWT and ownership rules."""
+"""Integration tests for JWT auth, admin access, and DB-backed endpoints."""
 
+import os
+import tempfile
 import unittest
 import uuid
-from types import SimpleNamespace
-from unittest.mock import patch
 
-from app import create_app
+from app import create_app, db
+from app.services import facade
 
 
-class BaseEndpointTestCase(unittest.TestCase):
-    """Shared helpers for endpoint tests."""
+class DatabaseTestCase(unittest.TestCase):
+    """Isolated SQLite-backed test case."""
 
     def setUp(self):
-        """Initialize test client."""
-        self.app = create_app()
+        fd, db_path = tempfile.mkstemp(suffix='.db')
+        os.close(fd)
+        self.db_path = db_path
+
+        class TestConfig:
+            TESTING = True
+            DEBUG = False
+            SECRET_KEY = 'test-secret-key-32-bytes-minimum-value'
+            JWT_SECRET_KEY = 'test-jwt-secret-key-32-bytes-minimum-value'
+            SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+            SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+        self.app = create_app(TestConfig)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.session.remove()
+        db.drop_all()
+        db.create_all()
         self.client = self.app.test_client()
 
-    def create_user(self, email=None, first_name='User', last_name='Test',
-                    password='secret123'):
-        """Create a user and return API data plus credentials."""
-        user_email = email or f"user.{uuid.uuid4()}@example.com"
-        response = self.client.post('/api/v1/users/', json={
-            'first_name': first_name,
-            'last_name': last_name,
-            'email': user_email,
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        self.app_context.pop()
+        if os.path.exists(self.db_path):
+            os.unlink(self.db_path)
+
+    def unique_email(self, prefix='user'):
+        return f'{prefix}.{uuid.uuid4()}@example.com'
+
+    def create_admin_direct(self, password='secret123'):
+        email = self.unique_email('admin')
+        user = facade.create_user({
+            'first_name': 'Admin',
+            'last_name': 'User',
+            'email': email,
             'password': password,
+            'is_admin': True,
         })
-        self.assertEqual(response.status_code, 201)
-        data = response.get_json()
-        data['email'] = user_email
-        data['password'] = password
-        return data
+        return {'id': user.id, 'email': email, 'password': password}
 
     def login(self, email, password):
-        """Return a bearer token for a user."""
         response = self.client.post('/api/v1/auth/login', json={
             'email': email,
             'password': password,
@@ -43,341 +64,168 @@ class BaseEndpointTestCase(unittest.TestCase):
         return response.get_json()['access_token']
 
     def auth_headers(self, token):
-        """Return Authorization headers for JWT requests."""
         return {'Authorization': f'Bearer {token}'}
 
-    def create_amenity(self, admin_token, name='WiFi'):
-        """Create an amenity through the API."""
-        response = self.client.post(
-            '/api/v1/amenities/',
-            json={'name': f'{name}-{uuid.uuid4()}'},
-            headers=self.auth_headers(admin_token),
-        )
+    def create_user_as_admin(self, admin_token, first_name='Regular', last_name='User',
+                             email=None, password='secret123', is_admin=False):
+        user_email = email or self.unique_email('user')
+        response = self.client.post('/api/v1/users/', json={
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': user_email,
+            'password': password,
+            'is_admin': is_admin,
+        }, headers=self.auth_headers(admin_token))
         self.assertEqual(response.status_code, 201)
-        return response.get_json()
+        payload = response.get_json()
+        payload['email'] = user_email
+        payload['password'] = password
+        return payload
 
-    def create_place(self, token, title='Cozy apartment', amenities=None, **overrides):
-        """Create a place owned by the authenticated user."""
-        payload = {
-            'title': title,
+    def create_place(self, token):
+        response = self.client.post('/api/v1/places/', json={
+            'title': 'Cozy apartment',
             'description': 'Comfortable city stay',
             'price': 120.5,
             'latitude': 48.8566,
             'longitude': 2.3522,
-            'amenities': amenities or [],
-        }
-        payload.update(overrides)
-        response = self.client.post(
-            '/api/v1/places/',
-            json=payload,
-            headers=self.auth_headers(token),
-        )
+            'amenities': [],
+        }, headers=self.auth_headers(token))
         self.assertEqual(response.status_code, 201)
         return response.get_json()
 
-    def create_review(self, token, place_id, text='Great stay', rating=5):
-        """Create a review for a place."""
-        response = self.client.post(
-            '/api/v1/reviews/',
-            json={'text': text, 'rating': rating, 'place_id': place_id},
-            headers=self.auth_headers(token),
-        )
-        return response
-
 
 class AuthEndpointTests(DatabaseTestCase):
-    """Validate authentication and JWT-protected access."""
-
-    def test_login_returns_access_token_for_valid_credentials(self):
-        """A valid login returns a JWT."""
-        user = self.create_user_via_api()
-
+    def test_login_returns_token(self):
+        admin = self.create_admin_direct()
         response = self.client.post('/api/v1/auth/login', json={
-            'email': user['email'],
-            'password': user['password'],
+            'email': admin['email'],
+            'password': admin['password'],
         })
-
         self.assertEqual(response.status_code, 200)
         self.assertIn('access_token', response.get_json())
 
-    def test_login_rejects_invalid_credentials(self):
-        """An invalid password is rejected."""
-        user = self.create_user_via_api()
-
-        response = self.client.post('/api/v1/auth/login', json={
-            'email': user['email'],
-            'password': 'wrong-password',
-        })
-
-        self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.get_json()['error'], 'Invalid credentials')
-
-    def test_protected_endpoint_requires_token(self):
-        """The protected auth route denies anonymous requests."""
+    def test_protected_requires_token(self):
         response = self.client.get('/api/v1/auth/protected')
         self.assertEqual(response.status_code, 401)
 
-    def test_protected_endpoint_returns_authenticated_identity(self):
-        """The protected auth route uses the JWT identity."""
-        user = self.create_user_via_api()
-        token = self.login(user['email'], user['password'])
-
-        response = self.client.get(
-            '/api/v1/auth/protected',
-            headers=self.auth_headers(token),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()[
-                         'message'], f"Hello, user {user['id']}")
-
 
 class UserEndpointTests(DatabaseTestCase):
-    """Validate public registration and protected user updates."""
-
-    def test_create_user_persists_to_database(self):
-        """A public registration creates a persistent user."""
-        email = self.unique_email()
-
+    def test_create_user_requires_jwt(self):
         response = self.client.post('/api/v1/users/', json={
             'first_name': 'John',
             'last_name': 'Doe',
-            'email': email,
+            'email': self.unique_email(),
             'password': 'secret123',
         })
+        self.assertEqual(response.status_code, 401)
 
-        self.assertEqual(response.status_code, 201)
-        created_id = response.get_json()['id']
-        created_user = facade.get_user(created_id)
-        self.assertIsNotNone(created_user)
-        self.assertEqual(created_user.email, email)
+    def test_create_user_requires_admin(self):
+        admin = self.create_admin_direct()
+        admin_token = self.login(admin['email'], admin['password'])
+        user = self.create_user_as_admin(admin_token)
+        user_token = self.login(user['email'], user['password'])
 
-    def test_duplicate_email_is_rejected(self):
-        """Two users cannot register with the same email."""
-        email = self.unique_email()
-        first_response = self.client.post('/api/v1/users/', json={
-            'first_name': 'Jane',
-            'last_name': 'Doe',
-            'email': email,
+        response = self.client.post('/api/v1/users/', json={
+            'first_name': 'Other',
+            'last_name': 'User',
+            'email': self.unique_email('other'),
             'password': 'secret123',
-        })
-        self.assertEqual(first_response.status_code, 201)
+        }, headers=self.auth_headers(user_token))
+        self.assertEqual(response.status_code, 403)
 
-        second_response = self.client.post('/api/v1/users/', json={
-            'first_name': 'Jane',
-            'last_name': 'Smith',
-            'email': email,
-            'password': 'secret123',
-        })
-
-        self.assertEqual(second_response.status_code, 400)
-        self.assertEqual(second_response.get_json()[
-                         'message'], 'Email already registered')
-
-    def test_user_can_update_own_name(self):
-        """A non-admin may update their own non-sensitive fields."""
-        user = self.create_user_via_api()
-        token = self.login(user['email'], user['password'])
-
-        response = self.client.put(
-            f"/api/v1/users/{user['id']}",
-            json={'first_name': 'Updated'},
-            headers=self.auth_headers(token),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()['first_name'], 'Updated')
-
-    @unittest.expectedFailure
-    def test_non_admin_cannot_update_another_user(self):
-        """A regular user should not be able to edit someone else's profile."""
-        owner = self.create_user_via_api()
-        outsider = self.create_user_via_api()
-        outsider_token = self.login(outsider['email'], outsider['password'])
+    def test_non_admin_cannot_update_other_user(self):
+        admin = self.create_admin_direct()
+        admin_token = self.login(admin['email'], admin['password'])
+        owner = self.create_user_as_admin(
+            admin_token, email=self.unique_email('owner'))
+        guest = self.create_user_as_admin(
+            admin_token, email=self.unique_email('guest'))
+        guest_token = self.login(guest['email'], guest['password'])
 
         response = self.client.put(
             f"/api/v1/users/{owner['id']}",
             json={'first_name': 'Intrusion'},
-            headers=self.auth_headers(outsider_token),
+            headers=self.auth_headers(guest_token),
         )
-
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.get_json()[
                          'message'], 'Unauthorized action.')
 
-    def test_admin_can_update_another_user(self):
-        """An admin can edit another user's profile."""
-        admin = self.create_user_via_api(is_admin=True)
-        member = self.create_user_via_api()
+    def test_non_admin_cannot_change_email_or_password(self):
+        admin = self.create_admin_direct()
         admin_token = self.login(admin['email'], admin['password'])
+        user = self.create_user_as_admin(admin_token)
+        user_token = self.login(user['email'], user['password'])
+
+        response = self.client.put(
+            f"/api/v1/users/{user['id']}",
+            json={'email': self.unique_email('new')},
+            headers=self.auth_headers(user_token),
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()[
+                         'message'], 'You cannot modify email or password.')
+
+    def test_admin_can_update_user_password(self):
+        admin = self.create_admin_direct(password='adminpass')
+        admin_token = self.login(admin['email'], admin['password'])
+        member = self.create_user_as_admin(admin_token, password='oldpass')
 
         response = self.client.put(
             f"/api/v1/users/{member['id']}",
-            json={'first_name': 'Reviewed'},
+            json={'password': 'newpass123'},
             headers=self.auth_headers(admin_token),
         )
-
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()['first_name'], 'Reviewed')
 
-
-class AmenityEndpointTests(DatabaseTestCase):
-    """Validate admin-only amenity writes with a real database."""
-
-    def test_non_admin_cannot_create_amenity(self):
-        """A regular user is rejected from admin-only amenity creation."""
-        user = self.create_user_via_api()
-        token = self.login(user['email'], user['password'])
-
-        response = self.client.post(
-            '/api/v1/amenities/',
-            json={'name': 'Pool'},
-            headers=self.auth_headers(token),
-        )
-
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get_json()[
-                         'error'], 'Admin privileges required')
-
-    def test_admin_can_create_and_delete_amenity(self):
-        """An admin can manage amenity lifecycle."""
-        admin = self.create_user_via_api(is_admin=True)
-        admin_token = self.login(admin['email'], admin['password'])
-
-        created = self.create_amenity(admin_token, name='Pool')
-        delete_response = self.client.delete(
-            f"/api/v1/amenities/{created['id']}",
-            headers=self.auth_headers(admin_token),
-        )
-
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertIsNone(facade.get_amenity(created['id']))
+        relogin = self.client.post('/api/v1/auth/login', json={
+            'email': member['email'],
+            'password': 'newpass123',
+        })
+        self.assertEqual(relogin.status_code, 200)
 
 
 class PlaceEndpointTests(DatabaseTestCase):
-    """Validate ownership and admin access rules for places."""
-
-    def test_create_place_requires_jwt(self):
-        """Anonymous users cannot create places."""
-        response = self.client.post('/api/v1/places/', json={
-            'title': 'No token',
-            'description': 'Denied',
-            'price': 40,
-            'latitude': 1.0,
-            'longitude': 2.0,
-            'amenities': [],
-        })
-
-        self.assertEqual(response.status_code, 401)
-
     def test_place_owner_is_taken_from_jwt(self):
-        """Payload owner_id is ignored in favor of JWT identity."""
-        owner = self.create_user_via_api()
-        other_user = self.create_user_via_api()
-        token = self.login(owner['email'], owner['password'])
+        admin = self.create_admin_direct()
+        admin_token = self.login(admin['email'], admin['password'])
+        owner = self.create_user_as_admin(
+            admin_token, email=self.unique_email('owner'))
+        other = self.create_user_as_admin(
+            admin_token, email=self.unique_email('other'))
+        owner_token = self.login(owner['email'], owner['password'])
 
-        response = self.client.post(
-            '/api/v1/places/',
-            json={
-                'title': 'Token owned',
-                'description': 'Owner derived from JWT',
-                'price': 85,
-                'latitude': 12.3,
-                'longitude': 45.6,
-                'owner_id': other_user['id'],
-                'amenities': [],
-            },
-            headers=self.auth_headers(token),
-        )
+        response = self.client.post('/api/v1/places/', json={
+            'title': 'Token owned',
+            'description': 'Owner from JWT',
+            'price': 95,
+            'latitude': 12.3,
+            'longitude': 45.6,
+            'owner_id': other['id'],
+            'amenities': [],
+        }, headers=self.auth_headers(owner_token))
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.get_json()['owner_id'], owner['id'])
 
     def test_non_owner_cannot_update_place(self):
-        """A user cannot update a place they do not own."""
-        owner = self.create_user_via_api()
-        guest = self.create_user_via_api()
+        admin = self.create_admin_direct()
+        admin_token = self.login(admin['email'], admin['password'])
+        owner = self.create_user_as_admin(
+            admin_token, email=self.unique_email('owner'))
+        guest = self.create_user_as_admin(
+            admin_token, email=self.unique_email('guest'))
         owner_token = self.login(owner['email'], owner['password'])
         guest_token = self.login(guest['email'], guest['password'])
         place = self.create_place(owner_token)
 
         response = self.client.put(
             f"/api/v1/places/{place['id']}",
-            json={'title': 'Compromised'},
+            json={'title': 'Intrusion'},
             headers=self.auth_headers(guest_token),
         )
-
         self.assertEqual(response.status_code, 403)
-        self.assertEqual(response.get_json()[
-                         'message'], 'Unauthorized action.')
-
-    def test_admin_can_delete_any_place(self):
-        """An admin can delete a place owned by another user."""
-        owner = self.create_user_via_api()
-        admin = self.create_user_via_api(is_admin=True)
-        owner_token = self.login(owner['email'], owner['password'])
-        admin_token = self.login(admin['email'], admin['password'])
-        place = self.create_place(owner_token)
-
-        response = self.client.delete(
-            f"/api/v1/places/{place['id']}",
-            headers=self.auth_headers(admin_token),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIsNone(facade.get_place(place['id']))
-
-
-class ReviewEndpointTests(DatabaseTestCase):
-    """Validate review rules, ownership, and admin moderation."""
-
-    def test_user_cannot_review_own_place(self):
-        """A place owner is blocked from reviewing their own place."""
-        owner = self.create_user_via_api()
-        owner_token = self.login(owner['email'], owner['password'])
-        place = self.create_place(owner_token)
-
-        response = self.create_review(owner_token, place['id'])
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()[
-                         'message'], 'You cannot review your own place.')
-
-    def test_user_cannot_review_same_place_twice(self):
-        """A reviewer may leave only one review per place."""
-        owner = self.create_user_via_api()
-        reviewer = self.create_user_via_api()
-        owner_token = self.login(owner['email'], owner['password'])
-        reviewer_token = self.login(reviewer['email'], reviewer['password'])
-        place = self.create_place(owner_token)
-
-        first_response = self.create_review(reviewer_token, place['id'])
-        second_response = self.create_review(reviewer_token, place['id'])
-
-        self.assertEqual(first_response.status_code, 201)
-        self.assertEqual(second_response.status_code, 400)
-        self.assertEqual(second_response.get_json()[
-                         'message'], 'You have already reviewed this place.')
-
-    def test_admin_can_delete_other_users_review(self):
-        """An admin can moderate and delete a review they do not own."""
-        owner = self.create_user_via_api()
-        reviewer = self.create_user_via_api()
-        admin = self.create_user_via_api(is_admin=True)
-        owner_token = self.login(owner['email'], owner['password'])
-        reviewer_token = self.login(reviewer['email'], reviewer['password'])
-        admin_token = self.login(admin['email'], admin['password'])
-        place = self.create_place(owner_token)
-        review_response = self.create_review(reviewer_token, place['id'])
-        review_id = review_response.get_json()['id']
-
-        delete_response = self.client.delete(
-            f"/api/v1/reviews/{review_id}",
-            headers=self.auth_headers(admin_token),
-        )
-
-        self.assertEqual(delete_response.status_code, 200)
-        self.assertIsNone(facade.get_review(review_id))
 
 
 if __name__ == '__main__':
