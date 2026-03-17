@@ -29,11 +29,13 @@ class Review(BaseModel):
 
     place = db.relationship(
         "Place",
-        back_populates="reviews")
+        back_populates="reviews",
+        lazy="select")
 
     user = db.relationship(
         "User",
-        back_populates="reviews")
+        back_populates="reviews",
+        lazy="select")
 
 
     def __init__(self, text, rating, place, user):

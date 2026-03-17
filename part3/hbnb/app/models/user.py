@@ -1,6 +1,7 @@
 from app import db, bcrypt
 from app.models.base_model import BaseModel
 from email_validator import validate_email, EmailNotValidError
+from sqlalchemy.orm import relationship
 
 
 class User(BaseModel):
@@ -13,6 +14,19 @@ class User(BaseModel):
     _email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
+
+    # Relationships
+    places = relationship(
+        "Place",
+        back_populates="owner",
+        lazy="select",
+        cascade="all, delete-orphan")
+    
+    reviews = relationship(
+        "Review",
+        back_populates="user",
+        lazy="select",
+        cascade="all, delete-orphan")
 
     def __init__(self, first_name, last_name, email, password=None, is_admin=False):
         """Create a user instance."""

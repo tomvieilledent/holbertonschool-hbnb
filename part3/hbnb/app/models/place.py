@@ -44,18 +44,20 @@ class Place(BaseModel):
     
     owner = db.relationship(
         "User",
-        back_populates="places")
+        back_populates="places",
+        lazy="select")
 
     reviews = db.relationship(
         "Review",
         back_populates="place",
-        cascade="all, delete-orphan")
+        cascade="all, delete-orphan",
+        lazy="select")
 
     amenities = db.relationship(
         "Amenity",
         secondary=place_amenity,
         back_populates="places",
-        lazy="subquery")
+        lazy="select")
     
 
     def __init__(self, title, description, price, latitude, longitude, owner):

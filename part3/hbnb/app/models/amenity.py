@@ -17,7 +17,7 @@ class Amenity(BaseModel):
         "Place",
         secondary="place_amenity",
         back_populates="amenities",
-        lazy="subquery")
+        lazy="select")
 
 
     def __init__(self, name):
