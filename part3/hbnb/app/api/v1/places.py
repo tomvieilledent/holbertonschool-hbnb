@@ -189,6 +189,30 @@ class PlaceResource(Resource):
             'amenities': [amenity.id for amenity in place.amenities],
         }, 200
 
+    @api.response(200, 'Place deleted successfully')
+    @api.response(404, 'Place not found')
+    @api.response(403, 'Forbidden')
+    @jwt_required()
+    def delete(self, place_id):
+        """Delete a place"""
+        place = facade.get_place(place_id)
+        if not place:
+            return {'message': 'Place not found'}, 404
+
+        current_user_id = get_jwt_identity()
+        current_user_claims = get_jwt()
+        is_admin = current_user_claims.get('is_admin', False)
+
+        # Admins can delete any place; non-admins can only delete their own
+        if not is_admin and (not place.owner or str(place.owner.id) != str(current_user_id)):
+            return {'message': 'Unauthorized action.'}, 403
+
+        try:
+            facade.delete_place(place_id)
+            return {'message': 'Place deleted successfully'}, 200
+        except ValueError as e:
+            return {'message': str(e)}, 404
+
 
 @api.route('/<place_id>/reviews')
 class PlaceReviewList(Resource):

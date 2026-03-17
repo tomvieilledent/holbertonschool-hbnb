@@ -78,6 +78,13 @@ class HBnBFacade:
         self.amenity_repository.update(amenity_id, amenity_data)
         return amenity
 
+    def delete_amenity(self, amenity_id):
+        """Delete an amenity by ID."""
+        amenity = self.get_amenity(amenity_id)
+        if not amenity:
+            raise ValueError("Amenity not found")
+        self.amenity_repository.delete(amenity_id)
+
 # endregion
 
 
@@ -149,6 +156,13 @@ class HBnBFacade:
 
         self.place_repository.update(place_id, data)
         return place
+
+    def delete_place(self, place_id):
+        """Delete a place by ID."""
+        place = self.get_place(place_id)
+        if not place:
+            raise ValueError("Place not found")
+        self.place_repository.delete(place_id)
 
 # endregion
 
