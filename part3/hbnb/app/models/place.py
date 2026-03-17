@@ -1,9 +1,62 @@
+from app import db
+from decimal import Decimal, InvalidOperation
 from app.models.base_model import BaseModel
 from app.models.user import User
+from sqlalchemy.orm import relationship
+
+
+place_amenity = db.Table(
+    "place_amenity",
+    db.Column("place_id", db.String(36), db.ForeignKey("places.id"), primary_key=True),
+    db.Column("amenity_id", db.String(36), db.ForeignKey("amenities.id"), primary_key=True)
+)
 
 
 class Place(BaseModel):
     """Place entity with location, owner, and relations."""
+
+    __tablename__ = 'places'
+
+    _title = db.Column(
+        db.String(100),
+        nullable=False)
+    
+    _description = db.Column(
+        db.String(2000),
+        nullable=False)
+    
+    _price = db.Column(
+        db.Numeric(10, 2),
+        nullable=False)
+    
+    _latitude = db.Column(
+        db.Float,
+        nullable=False)
+    
+    _longitude = db.Column(
+        db.Float,
+        nullable=False)
+    
+    user_id = db.Column(
+        db.String(36),
+        db.ForeignKey("users.id"),
+        nullable=False)
+    
+    owner = db.relationship(
+        "User",
+        back_populates="places")
+
+    reviews = db.relationship(
+        "Review",
+        back_populates="place",
+        cascade="all, delete-orphan")
+
+    amenities = db.relationship(
+        "Amenity",
+        secondary=place_amenity,
+        back_populates="places",
+        lazy="subquery")
+    
 
     def __init__(self, title, description, price, latitude, longitude, owner):
         """Create a place instance."""
@@ -13,10 +66,12 @@ class Place(BaseModel):
         self.price = price
         self.latitude = latitude
         self.longitude = longitude
+        if not isinstance(owner, User):
+            raise TypeError("Owner must be a User.")
         self.owner = owner
-        self.reviews = []
-        self.amenities = []
 
+
+#region Title
     @property
     def title(self):
         """Return the place title."""
@@ -33,7 +88,10 @@ class Place(BaseModel):
         if len(title) > 100:
             raise ValueError("Title cannot exceed 100 characters.")
         self._title = title
+#endregion
 
+
+#region Description
     @property
     def description(self):
         """Return the place description."""
@@ -42,16 +100,18 @@ class Place(BaseModel):
     @description.setter
     def description(self, description):
         """Set and validate the place description."""
-        if description is None:
-            self._description = None
-            return
         if not isinstance(description, str):
             raise TypeError("Description must be a string.")
         description = description.strip()
         if not description:
             raise ValueError("Description cannot be empty.")
+        if len(description) > 2000:
+            raise ValueError("Description cannot exceed 2000 characters.")
         self._description = description
+#endregion
 
+
+#region Price
     @property
     def price(self):
         """Return the nightly price."""
@@ -60,12 +120,19 @@ class Place(BaseModel):
     @price.setter
     def price(self, price):
         """Set and validate the nightly price."""
-        if not isinstance(price, (int, float)):
-            raise TypeError("Price must be a float.")
-        if price < 0:
+        try:
+            price = Decimal(str(price)).quantize(Decimal('0.01'))
+        except (InvalidOperation, TypeError):
+            raise TypeError("Price must be a valid number.")
+        if price <= 0:
             raise ValueError("Price must be positive.")
-        self._price = float(price)
+        if price > Decimal('99999999.99'):
+            raise ValueError("Price exceeds maximum allowed value.")
+        self._price = price
+#endregion
 
+
+#region Latitude
     @property
     def latitude(self):
         """Return the latitude."""
@@ -79,7 +146,10 @@ class Place(BaseModel):
         if not (-90 <= float(latitude) <= 90):
             raise ValueError("Latitude must be in range -90 : 90.")
         self._latitude = float(latitude)
+#endregion
 
+
+#region Longitude
     @property
     def longitude(self):
         """Return the longitude."""
@@ -93,18 +163,8 @@ class Place(BaseModel):
         if not (-180 <= float(longitude) <= 180):
             raise ValueError("Longitude must be in range -180 : 180.")
         self._longitude = float(longitude)
+#endregion
 
-    @property
-    def owner(self):
-        """Return the place owner."""
-        return self._owner
-
-    @owner.setter
-    def owner(self, owner):
-        """Set and validate the place owner."""
-        if not isinstance(owner, User):
-            raise TypeError("Owner must be an user.")
-        self._owner = owner
 
     def add_review(self, review):
         """Add a review to the place."""
