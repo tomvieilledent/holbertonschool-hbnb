@@ -4,3 +4,5 @@ flask-sqlalchemy
 sqlalchemy
 jsonschema>=4.18.0
 email-validator
+flask-bcrypt
+flask-jwt-extended
