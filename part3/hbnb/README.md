@@ -279,7 +279,7 @@ with app.app_context():
             "first_name": "Super",
             "last_name": "Admin",
             "email": email,
-            "password": "Admin1234!",
+            "password": "admin",
             "is_admin": True
         })
         print("Admin cree:", user.id, email)
