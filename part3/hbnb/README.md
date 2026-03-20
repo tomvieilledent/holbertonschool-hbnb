@@ -1,38 +1,38 @@
-# HBnB - Part 3 (API Flask, JWT Bearer, Swagger)
+# HBnB - Part 3
 
-API REST de la plateforme HBnB avec architecture en couches, persistance SQLAlchemy,
-authentification JWT Bearer, gestion des permissions (admin/user), et tests automatisés avec pytest.
+REST API for the HBnB platform with JWT Bearer authentication, Swagger/OpenAPI,
+layered architecture, and automated test coverage using pytest.
 
-## Sommaire
+## Table of Contents
 
-- Objectif
-- Stack technique
-- Architecture du projet
-- Documentation technique (partie 1 mise a jour)
-- Installation
-- Lancer l'application
-- Documentation Swagger
-- Authentification JWT Bearer
-- Endpoints API
-- Regles de validation metier
-- Exemples curl
-- Executer les tests
-- Pytest Summary (Last Run)
-- Limites actuelles
-- Auteurs
+- [1. Objective](#1-objective)
+- [2. Tech Stack](#2-tech-stack)
+- [3. Project Architecture](#3-project-architecture)
+- [4. Technical Documentation](#4-technical-documentation)
+- [5. Mermaid Diagrams](#5-mermaid-diagrams)
+- [6. Installation](#6-installation)
+- [7. Run the Application](#7-run-the-application)
+- [8. Swagger and Authentication](#8-swagger-and-authentication)
+- [9. API Endpoints](#9-api-endpoints)
+- [10. Business Rules and Validation](#10-business-rules-and-validation)
+- [11. cURL Examples](#11-curl-examples)
+- [12. Tests](#12-tests)
+- [13. Semantic Test Catalog](#13-semantic-test-catalog)
+- [14. Authors](#14-authors)
 
-## Objectif
+## 1. Objective
 
-Fournir une API HTTP claire, securisee et testable pour gerer:
+Part 3 provides a secure and production-style API to manage:
 
-- les utilisateurs
-- les commodites
-- les logements
-- les avis
+- users,
+- amenities,
+- places,
+- reviews,
 
-avec des validations strictes, des droits d'acces selon le role, et une authentification par token JWT.
+with strict business validation, role-based permissions (admin/user),
+and JWT authentication integrated with Swagger.
 
-## Stack technique
+## 2. Tech Stack
 
 - Python 3
 - Flask
@@ -41,17 +41,17 @@ avec des validations strictes, des droits d'acces selon le role, et une authenti
 - Flask-Bcrypt
 - Flask-JWT-Extended
 - email-validator
-- pytest
+- pytest / pytest-cov
 
-## Architecture du projet
+## 3. Project Architecture
 
 ```text
 hbnb/
 ├── app/
-│   ├── api/v1/              # Endpoints (auth, users, amenities, places, reviews)
-│   ├── models/              # Entites metier + validations
-│   ├── persistence/         # Repositories SQLAlchemy
-│   └── services/            # Facade (regles applicatives)
+│   ├── api/v1/              # REST endpoints (auth, users, amenities, places, reviews)
+│   ├── models/              # Domain entities + validations
+│   ├── persistence/         # SQLAlchemy repositories
+│   └── services/            # Facade (business logic)
 ├── config.py
 ├── run.py
 ├── requirements.txt
@@ -66,70 +66,270 @@ hbnb/
     └── test_reviews.py
 ```
 
-Flux global:
+Processing flow:
 
-`Route API -> Facade -> Repository -> SQLAlchemy/DB`
+`API Route -> Facade -> Repository -> SQLAlchemy/DB`
 
-## Documentation technique (partie 1 mise a jour)
+## 4. Technical Documentation
 
-Cette section reprend la logique documentaire de la partie 1, mise a jour pour le code actuel.
+### 4.1 Three-layer architecture
 
-### 1. Architecture 3 couches
+- Presentation: Flask-RESTX endpoints, JSON serialization, HTTP status handling.
+- Business: facade + models, business rule enforcement.
+- Persistence: SQLAlchemy repositories and database transactions.
 
-- Couche Presentation (API Flask-RESTX): recoit les requetes HTTP, valide les payloads RESTX, renvoie JSON.
-- Couche Logique metier (Facade + models): applique les regles metier, controle les relations entre entites.
-- Couche Persistance (repositories SQLAlchemy): gere CRUD et sessions DB.
+### 4.2 Facade pattern
 
-### 2. Pattern Facade
+`HBnBFacade` centralizes business operations:
 
-`HBnBFacade` centralise les operations metier:
-
-- Users: create/get/update/list, recherche par email
+- Users: create/get/update/list + email lookup
 - Amenities: create/get/update/delete/list
-- Places: create/get/update/delete/list + resolution owner/amenities
-- Reviews: create/get/update/delete/list + recherche par place
+- Places: create/get/update/delete/list + owner/amenity resolution
+- Reviews: create/get/update/delete/list + place filtering
 
-### 3. Entites et relations
+### 4.3 Entities and relationships
 
-- BaseModel: `id`, `created_at`, `updated_at`
-- User: first_name, last_name, email unique, password hash, is_admin
+- BaseModel: id, created_at, updated_at
+- User: first_name, last_name, unique email, hashed password, is_admin
 - Place: title, description, price, latitude, longitude, owner
 - Amenity: name
 - Review: text, rating, user, place
 
-Relations principales:
+Main relationships:
 
 - User 1..n Place
 - User 1..n Review
 - Place 1..n Review
 - Place n..n Amenity
 
-### 4. Regles metier clefs (mises a jour part3)
+### 4.4 Key business rules
 
-- JWT requis sur routes protegees
-- Admin requis pour creer users (API), creer/modifier/supprimer amenities
-- Un user normal ne peut modifier que ses propres ressources authorisees
-- `PUT /users/<id>`: un user non admin ne peut pas modifier email/password/is_admin
-- `POST /reviews`: interdit sur son propre logement
-- `POST /reviews`: un seul avis par user et par place
+- JWT is required on protected routes.
+- Admin role is required to:
+  - create users through API,
+  - create/update/delete amenities.
+- Non-admin users can only modify authorized own resources.
+- `PUT /users/<id>` for non-admin: email/password/is_admin are forbidden.
+- `POST /reviews`: users cannot review their own place.
+- `POST /reviews`: only one review per user per place.
 
-### 5. Flux API metier (version part3)
+## 5. Mermaid Diagrams
 
-- Login:
-  - recherche user par email
-  - verification du mot de passe hash
-  - emission d'un `access_token` JWT avec claim `is_admin`
-- Creation place:
-  - owner force depuis l'identite JWT
-  - validation des donnees (prix/coordonnees/amenities)
-- Soumission review:
-  - verification place existante
-  - refus si owner = auteur
-  - refus si review deja existante pour ce user/place
+### 5.1 High-level architecture
 
-## Installation
+```mermaid
+flowchart TB
+  subgraph PL[Presentation Layer API Flask-RESTX]
+    USERS[users namespace]
+    AMENITIES[amenities namespace]
+    PLACES[places namespace]
+    REVIEWS[reviews namespace]
+    AUTH[auth namespace]
+  end
 
-Depuis le dossier `hbnb`:
+  subgraph BL[Business Logic Layer]
+    FACADE[HBnBFacade]
+    MODELS[Models User Place Review Amenity]
+  end
+
+  subgraph PEL[Persistence Layer SQLAlchemy]
+    UREPO[UserRepository]
+    REPO[SQLAlchemyRepository]
+    DB[(SQLite or configured DB)]
+  end
+
+  USERS --> FACADE
+  AMENITIES --> FACADE
+  PLACES --> FACADE
+  REVIEWS --> FACADE
+  AUTH --> FACADE
+  FACADE --> MODELS
+  FACADE --> UREPO
+  FACADE --> REPO
+  UREPO --> DB
+  REPO --> DB
+```
+
+### 5.2 Class diagram
+
+```mermaid
+classDiagram
+    class BaseModel {
+        <<abstract>>
+        +id: string
+        +created_at: datetime
+        +updated_at: datetime
+        +save()
+        +update(data)
+    }
+
+    class User {
+        +_first_name: string
+        +_last_name: string
+        +_email: string
+        +password: string
+        +is_admin: bool
+        +set_password(password)
+        +verify_password(password)
+    }
+
+    class Place {
+        +_title: string
+        +_description: string
+        +_price: decimal
+        +_latitude: float
+        +_longitude: float
+    }
+
+    class Amenity {
+        +_name: string
+    }
+
+    class Review {
+        +_text: string
+        +_rating: int
+    }
+
+    class HBnBFacade {
+        +create_user(data)
+        +get_user(id)
+        +update_user(id,data)
+        +create_place(data)
+        +update_place(id,data)
+        +create_review(data)
+        +get_reviews_by_place(place_id)
+    }
+
+    class UserRepository
+    class SQLAlchemyRepository
+
+    BaseModel <|-- User
+    BaseModel <|-- Place
+    BaseModel <|-- Amenity
+    BaseModel <|-- Review
+
+    User "1" --> "0..*" Place : owns
+    User "1" --> "0..*" Review : writes
+    Place "1" --> "0..*" Review : receives
+    Place "0..*" --> "0..*" Amenity : has
+
+    HBnBFacade --> UserRepository
+    HBnBFacade --> SQLAlchemyRepository
+```
+
+### 5.3 Sequence - User creation (admin)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Admin User
+    participant API as Users API
+    participant F as HBnBFacade
+    participant URepo as UserRepository
+    participant DB as Database
+
+    A->>API: POST /api/v1/users/ + Bearer token
+    API->>API: Check JWT and is_admin claim
+    API->>F: create_user(payload)
+    F->>URepo: get_user_by_email(email)
+    URepo->>DB: SELECT by email
+    DB-->>URepo: none
+    F->>URepo: add(new User)
+    URepo->>DB: INSERT user
+    DB-->>URepo: created
+    API-->>A: 201 Created
+```
+
+### 5.4 Sequence - Place creation
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Authenticated User
+    participant API as Places API
+    participant JWT as JWT Manager
+    participant F as HBnBFacade
+    participant URepo as UserRepository
+    participant ARepo as Amenity Repository
+    participant PRepo as Place Repository
+    participant DB as Database
+
+    U->>API: POST /api/v1/places/ + Bearer token
+    API->>JWT: get_jwt_identity()
+    JWT-->>API: owner_id from token
+    API->>F: create_place(payload + owner_id)
+    F->>URepo: get(owner_id)
+    URepo->>DB: SELECT user
+    loop each amenity id
+      F->>ARepo: get(amenity_id)
+      ARepo->>DB: SELECT amenity
+    end
+    F->>PRepo: add(new Place)
+    PRepo->>DB: INSERT place + relations
+    API-->>U: 201 Created
+```
+
+### 5.5 Sequence - Review submission
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as Authenticated User
+    participant API as Reviews API
+    participant F as HBnBFacade
+    participant PRepo as Place Repository
+    participant RRepo as Review Repository
+    participant URepo as UserRepository
+    participant DB as Database
+
+    U->>API: POST /api/v1/reviews/ + Bearer token
+    API->>F: get_place(place_id)
+    F->>PRepo: get(place_id)
+    PRepo->>DB: SELECT place
+
+    alt place not found
+      API-->>U: 404 Place not found
+    else place found
+      API->>F: get_reviews_by_place(place_id)
+      F->>RRepo: get_all filtered by place
+      RRepo->>DB: SELECT reviews
+
+      alt owner reviews own place OR duplicate review
+        API-->>U: 400 Business rule violation
+      else valid
+        API->>F: create_review(text,rating,place,user)
+        F->>URepo: get(current_user_id)
+        URepo->>DB: SELECT user
+        F->>RRepo: add(review)
+        RRepo->>DB: INSERT review
+        API-->>U: 201 Created
+      end
+    end
+```
+
+### 5.6 Sequence - Place list retrieval
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant API as Places API
+    participant F as HBnBFacade
+    participant PRepo as Place Repository
+    participant DB as Database
+
+    C->>API: GET /api/v1/places/
+    API->>F: get_all_places()
+    F->>PRepo: get_all()
+    PRepo->>DB: SELECT places
+    PRepo-->>F: places
+    F-->>API: serialized summary list
+    API-->>C: 200 OK + list
+```
+
+## 6. Installation
+
+From the `hbnb` directory:
 
 ```bash
 python3 -m venv .venv
@@ -138,31 +338,25 @@ pip install -r requirements.txt
 pip install pytest pytest-cov
 ```
 
-## Lancer l'application
+## 7. Run the Application
 
 ```bash
 source .venv/bin/activate
 python3 run.py
 ```
 
-URLs par defaut:
+Default URLs:
 
-- API base: `http://127.0.0.1:5000/api/v1`
-- Swagger UI: `http://127.0.0.1:5000/`
+- API: http://127.0.0.1:5000/api/v1
+- Swagger UI: http://127.0.0.1:5000/
 
-## Documentation Swagger
+## 8. Swagger and Authentication
 
-Interface disponible a la racine:
-
-`http://127.0.0.1:5000/`
-
-## Authentification JWT Bearer
-
-Header requis sur routes protegees:
+Required header for protected routes:
 
 `Authorization: Bearer <token>`
 
-### Creer ou promouvoir un compte admin
+### Create or promote an admin account
 
 ```bash
 source .venv/bin/activate
@@ -192,7 +386,7 @@ with app.app_context():
 PY
 ```
 
-### Se connecter et recuperer le token
+### Admin login
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/auth/login \
@@ -200,7 +394,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/auth/login \
   -d '{"email":"admin@example.com","password":"admin"}'
 ```
 
-Reponse attendue:
+Expected response:
 
 ```json
 {
@@ -208,88 +402,85 @@ Reponse attendue:
 }
 ```
 
-### Utiliser le token dans Swagger
+In Swagger, click Authorize and enter exactly:
 
-1. Ouvrir Swagger
-2. Cliquer sur Authorize
-3. Coller exactement: `Bearer <token>`
-4. Valider puis tester les routes protegees
+`Bearer <token>`
 
-## Endpoints API
+## 9. API Endpoints
 
-Base URL: `http://127.0.0.1:5000/api/v1`
+Base URL: http://127.0.0.1:5000/api/v1
 
 ### Auth
 
-- `POST /auth/login`
-- `GET /auth/protected`
+- POST /auth/login
+- GET /auth/protected
 
 ### Users
 
-- `POST /users/` (admin only)
-- `GET /users/` (public)
-- `GET /users/<user_id>` (public)
-- `PUT /users/<user_id>` (owner or admin)
+- POST /users/ (admin only)
+- GET /users/ (public)
+- GET /users/<user_id> (public)
+- PUT /users/<user_id> (owner or admin)
 
 ### Amenities
 
-- `POST /amenities/` (admin only)
-- `GET /amenities/` (public)
-- `GET /amenities/<amenity_id>` (public)
-- `PUT /amenities/<amenity_id>` (admin only)
-- `DELETE /amenities/<amenity_id>` (admin only)
+- POST /amenities/ (admin only)
+- GET /amenities/ (public)
+- GET /amenities/<amenity_id> (public)
+- PUT /amenities/<amenity_id> (admin only)
+- DELETE /amenities/<amenity_id> (admin only)
 
 ### Places
 
-- `POST /places/` (auth)
-- `GET /places/` (public)
-- `GET /places/<place_id>` (public)
-- `PUT /places/<place_id>` (owner or admin)
-- `DELETE /places/<place_id>` (owner or admin)
-- `GET /places/<place_id>/reviews` (public)
+- POST /places/ (authenticated)
+- GET /places/ (public)
+- GET /places/<place_id> (public)
+- PUT /places/<place_id> (owner or admin)
+- DELETE /places/<place_id> (owner or admin)
+- GET /places/<place_id>/reviews (public)
 
 ### Reviews
 
-- `POST /reviews/` (auth)
-- `GET /reviews/` (public)
-- `GET /reviews/<review_id>` (public)
-- `PUT /reviews/<review_id>` (owner or admin)
-- `DELETE /reviews/<review_id>` (owner or admin)
+- POST /reviews/ (authenticated)
+- GET /reviews/ (public)
+- GET /reviews/<review_id> (public)
+- PUT /reviews/<review_id> (owner or admin)
+- DELETE /reviews/<review_id> (owner or admin)
 
-## Regles de validation metier
+## 10. Business Rules and Validation
 
 ### User
 
-- `first_name`: string non vide, max 50
-- `last_name`: string non vide, max 50
-- `email`: format valide, unique
-- `password`: stocke hash
+- first_name: non-empty string, max length 50
+- last_name: non-empty string, max length 50
+- email: valid format and unique
+- password: stored as hash
 
 ### Amenity
 
-- `name`: string non vide, max 50
+- name: non-empty string, max length 50
 
 ### Place
 
-- `title`: string non vide, max 100
-- `description`: string non vide, max 2000
-- `price`: nombre strictement positif
-- `latitude`: [-90, 90]
-- `longitude`: [-180, 180]
-- `owner_id`: derive du JWT (pas du payload client)
-- `amenities`: ids existants uniquement
+- title: non-empty string, max length 100
+- description: non-empty string, max length 2000
+- price: strictly positive number
+- latitude: range [-90, 90]
+- longitude: range [-180, 180]
+- owner_id: derived from JWT identity (not from client payload)
+- amenities: existing IDs only
 
 ### Review
 
-- `text`: string (max 2000)
-- `rating`: entier de 1 a 5
-- `place_id`: doit exister
-- refus si owner du place
-- refus si review deja postee par ce user sur cette place
+- text: string (max length 2000)
+- rating: integer in range [1, 5]
+- place_id: must exist
+- users cannot review their own place
+- one review per user per place
 
-## Exemples curl
+## 11. cURL Examples
 
-### Login admin
+### Admin login
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/auth/login \
@@ -297,7 +488,7 @@ curl -X POST http://127.0.0.1:5000/api/v1/auth/login \
   -d '{"email":"admin@example.com","password":"admin"}'
 ```
 
-### Creer une amenity (admin)
+### Create amenity (admin)
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/amenities/ \
@@ -306,15 +497,15 @@ curl -X POST http://127.0.0.1:5000/api/v1/amenities/ \
   -d '{"name":"WiFi"}'
 ```
 
-### Creer une place (user connecte)
+### Create place (authenticated user)
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/places/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
-    "title":"Studio centre-ville",
-    "description":"Calme et lumineux",
+    "title":"Studio center",
+    "description":"Quiet and bright",
     "price":79.9,
     "latitude":48.8566,
     "longitude":2.3522,
@@ -322,25 +513,25 @@ curl -X POST http://127.0.0.1:5000/api/v1/places/ \
   }'
 ```
 
-### Creer une review
+### Create review
 
 ```bash
 curl -X POST http://127.0.0.1:5000/api/v1/reviews/ \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
-  -d '{"text":"Super sejour","rating":5,"place_id":"<PLACE_ID>"}'
+  -d '{"text":"Great stay","rating":5,"place_id":"<PLACE_ID>"}'
 ```
 
-## Executer les tests
+## 12. Tests
 
-Depuis `hbnb`:
+From the `hbnb` directory:
 
 ```bash
 source .venv/bin/activate
 pytest
 ```
 
-Commandes utiles:
+Useful commands:
 
 ```bash
 pytest -v -rA
@@ -349,62 +540,70 @@ pytest tests/test_auth.py
 pytest --cov=app --cov-report=term-missing
 ```
 
-## Pytest Summary (Last Run)
+## 13. Semantic Test Catalog
 
-- 42 passed
+Each line describes a test expected to pass during a standard `pytest` run.
 
-Liste (une ligne par test):
+### Auth (4 tests)
 
-- PASSED tests/test_amenities.py::test_amenities_get_list_public_returns_200
-- PASSED tests/test_amenities.py::test_amenities_post_requires_auth_returns_401
-- PASSED tests/test_amenities.py::test_amenities_post_non_admin_returns_403
-- PASSED tests/test_amenities.py::test_amenities_post_admin_creates
-- PASSED tests/test_amenities.py::test_amenities_post_invalid_payload_returns_400
-- PASSED tests/test_amenities.py::test_amenities_get_one_unknown_returns_404
-- PASSED tests/test_amenities.py::test_amenities_put_admin_updates
-- PASSED tests/test_amenities.py::test_amenities_put_non_admin_returns_403
-- PASSED tests/test_amenities.py::test_amenities_delete_admin_returns_200
-- PASSED tests/test_amenities.py::test_amenities_delete_not_found_returns_404
-- PASSED tests/test_auth.py::test_login_success_returns_access_token
-- PASSED tests/test_auth.py::test_login_bad_credentials_returns_401
-- PASSED tests/test_auth.py::test_protected_requires_jwt_returns_401
-- PASSED tests/test_auth.py::test_protected_with_token_returns_200
-- PASSED tests/test_places.py::test_places_get_list_public_returns_200
-- PASSED tests/test_places.py::test_places_post_requires_auth_returns_401
-- PASSED tests/test_places.py::test_places_post_user_creates_place
-- PASSED tests/test_places.py::test_places_post_invalid_payload_returns_400
-- PASSED tests/test_places.py::test_places_get_one_unknown_returns_404
-- PASSED tests/test_places.py::test_places_put_non_owner_returns_403
-- PASSED tests/test_places.py::test_places_put_owner_updates
-- PASSED tests/test_places.py::test_places_delete_non_owner_returns_403
-- PASSED tests/test_places.py::test_places_delete_owner_returns_200
-- PASSED tests/test_places.py::test_places_reviews_unknown_place_returns_404
-- PASSED tests/test_reviews.py::test_reviews_get_list_public_returns_200
-- PASSED tests/test_reviews.py::test_reviews_post_requires_auth_returns_401
-- PASSED tests/test_reviews.py::test_reviews_post_invalid_payload_returns_400
-- PASSED tests/test_reviews.py::test_reviews_post_place_not_found_returns_404
-- PASSED tests/test_reviews.py::test_reviews_owner_cannot_review_own_place_returns_400
-- PASSED tests/test_reviews.py::test_reviews_user_can_create_review
-- PASSED tests/test_reviews.py::test_reviews_put_non_owner_returns_403
-- PASSED tests/test_reviews.py::test_reviews_delete_owner_returns_200
-- PASSED tests/test_reviews.py::test_reviews_get_unknown_returns_404
-- PASSED tests/test_users.py::test_users_get_list_is_public
-- PASSED tests/test_users.py::test_users_post_requires_auth_returns_401
-- PASSED tests/test_users.py::test_users_post_non_admin_returns_403
-- PASSED tests/test_users.py::test_users_post_admin_creates_user
-- PASSED tests/test_users.py::test_users_post_invalid_payload_returns_400
-- PASSED tests/test_users.py::test_users_get_one_returns_404_for_unknown
-- PASSED tests/test_users.py::test_users_put_non_owner_non_admin_returns_403
-- PASSED tests/test_users.py::test_users_put_owner_cannot_change_email_returns_400
-- PASSED tests/test_users.py::test_users_put_admin_can_update_user
+- Valid login returns a JWT token.
+- Invalid login credentials return 401.
+- Protected route without token returns 401.
+- Protected route with valid token returns 200.
 
-## Limites actuelles
+### Users (9 tests)
 
-- Pas de pagination sur les listes
-- Quelques warnings SQLAlchemy possibles selon version
-- Pas de refresh token JWT (access token only)
+- Public users list returns 200.
+- User creation without auth returns 401.
+- User creation by non-admin returns 403.
+- User creation by admin returns 201.
+- User creation with invalid payload returns 400.
+- Unknown user retrieval returns 404.
+- Non-admin update of another user returns 403.
+- Non-admin email change attempt returns 400.
+- Admin user update returns 200.
 
-## Auteurs
+### Amenities (10 tests)
+
+- Public amenities list returns 200.
+- Amenity creation without auth returns 401.
+- Amenity creation by non-admin returns 403.
+- Amenity creation by admin returns 201.
+- Invalid amenity creation returns 400.
+- Unknown amenity retrieval returns 404.
+- Amenity update by admin returns 200.
+- Amenity update by non-admin returns 403.
+- Amenity delete by admin returns 200.
+- Unknown amenity delete returns 404.
+
+### Places (10 tests)
+
+- Public places list returns 200.
+- Place creation without auth returns 401.
+- Place creation by authenticated user returns 201.
+- Invalid place creation returns 400.
+- Unknown place retrieval returns 404.
+- Place update by non-owner returns 403.
+- Place update by owner returns 200.
+- Place delete by non-owner returns 403.
+- Place delete by owner returns 200.
+- Review list for unknown place returns 404.
+
+### Reviews (9 tests)
+
+- Public reviews list returns 200.
+- Review creation without auth returns 401.
+- Review creation with invalid payload returns 400.
+- Review creation on unknown place returns 404.
+- Owner cannot review own place returns 400.
+- Valid user review creation returns 201.
+- Review update by non-owner returns 403.
+- Review delete by owner returns 200.
+- Unknown review retrieval returns 404.
+
+Total: 42 tests.
+
+## 14. Authors
 
 Florian Roosebeke
 Tom Vieilledent
