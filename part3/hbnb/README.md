@@ -179,6 +179,7 @@ classDiagram
         +_price: decimal
         +_latitude: float
         +_longitude: float
+    +user_id: string
     }
 
     class Amenity {
@@ -188,30 +189,44 @@ classDiagram
     class Review {
         +_text: string
         +_rating: int
+    +place_id: string
+    +user_id: string
     }
 
     class HBnBFacade {
         +create_user(data)
         +get_user(id)
-        +update_user(id,data)
+    +update_user(id, data)
         +create_place(data)
-        +update_place(id,data)
+    +update_place(id, data)
         +create_review(data)
         +get_reviews_by_place(place_id)
     }
 
-    class UserRepository
-    class SQLAlchemyRepository
+  class SQLAlchemyRepository~T~ {
+    +add(obj)
+    +get(obj_id)
+    +get_all()
+    +update(obj_id, data)
+    +delete(obj_id)
+    +get_by_attribute(attr_name, attr_value)
+  }
+
+  class UserRepository {
+    +get_user_by_email(email)
+  }
 
     BaseModel <|-- User
     BaseModel <|-- Place
     BaseModel <|-- Amenity
     BaseModel <|-- Review
 
-    User "1" --> "0..*" Place : owns
-    User "1" --> "0..*" Review : writes
-    Place "1" --> "0..*" Review : receives
-    Place "0..*" --> "0..*" Amenity : has
+  SQLAlchemyRepository <|-- UserRepository
+
+  User "1" --> "0..*" Place : owner
+  User "1" --> "0..*" Review : author
+  Place "1" --> "0..*" Review : receives
+  Place "0..*" --> "0..*" Amenity : includes
 
     HBnBFacade --> UserRepository
     HBnBFacade --> SQLAlchemyRepository
