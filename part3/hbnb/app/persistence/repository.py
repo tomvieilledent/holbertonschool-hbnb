@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from app import db
 
 
-
 class Repository(ABC):
     @abstractmethod
     def add(self, obj):
@@ -40,7 +39,7 @@ class SQLAlchemyRepository(Repository):
         db.session.commit()
 
     def get(self, obj_id):
-        return self.model.query.get(obj_id)
+        return db.session.get(self.model, obj_id)
 
     def get_all(self):
         return self.model.query.all()

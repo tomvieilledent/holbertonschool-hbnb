@@ -203,7 +203,6 @@ class HBnBFacade:
             place=place,
             user=user,
         )
-        place.add_review(review)
         self.review_repository.add(review)
         return review
 
