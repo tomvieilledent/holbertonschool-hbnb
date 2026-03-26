@@ -115,6 +115,8 @@ Main relationships:
 
 ## 5. Mermaid Diagrams
 
+Dedicated ER file: [ER_DIAGRAMS.md](ER_DIAGRAMS.md)
+
 ### 5.1 High-level architecture
 
 ```mermaid
@@ -341,6 +343,100 @@ sequenceDiagram
     F-->>API: serialized summary list
     API-->>C: 200 OK + list
 ```
+
+  ### 5.7 ER diagram - Database schema (Part 3)
+
+  ```mermaid
+  erDiagram
+    USERS {
+      char36 id PK
+      varchar first_name
+      varchar last_name
+      varchar email UK
+      varchar password
+      boolean is_admin
+    }
+
+    PLACES {
+      char36 id PK
+      varchar title
+      text description
+      decimal price
+      float latitude
+      float longitude
+      char36 owner_id FK
+    }
+
+    REVIEWS {
+      char36 id PK
+      text text
+      int rating
+      char36 user_id FK
+      char36 place_id FK
+    }
+
+    AMENITIES {
+      char36 id PK
+      varchar name UK
+    }
+
+    PLACE_AMENITY {
+      char36 place_id PK,FK
+      char36 amenity_id PK,FK
+    }
+
+    USERS ||--o{ PLACES : owns
+    USERS ||--o{ REVIEWS : writes
+    PLACES ||--o{ REVIEWS : receives
+    PLACES ||--o{ PLACE_AMENITY : has
+    AMENITIES ||--o{ PLACE_AMENITY : has
+  ```
+
+  ### 5.8 ER diagram extension example - Reservation
+
+  Use this variant to practice adding a new entity and its relations:
+
+  ```mermaid
+  erDiagram
+    USERS {
+      char36 id PK
+      varchar first_name
+      varchar last_name
+      varchar email UK
+      varchar password
+      boolean is_admin
+    }
+
+    PLACES {
+      char36 id PK
+      varchar title
+      text description
+      decimal price
+      float latitude
+      float longitude
+      char36 owner_id FK
+    }
+
+    RESERVATIONS {
+      char36 id PK
+      char36 user_id FK
+      char36 place_id FK
+      date start_date
+      date end_date
+      decimal total_price
+      varchar status
+    }
+
+    USERS ||--o{ PLACES : owns
+    USERS ||--o{ RESERVATIONS : makes
+    PLACES ||--o{ RESERVATIONS : booked_for
+  ```
+
+  To export as PNG/SVG:
+
+  1. Paste one diagram in Mermaid Live Editor.
+  2. Check render and fix any typo if needed.
+  3. Use Export -> PNG or Export -> SVG.
 
 ## 6. Installation
 
