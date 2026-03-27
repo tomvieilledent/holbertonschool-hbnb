@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBNB</title>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <header>
+        <table width="100%">
+            <tr>
+                <td align="left">
+                    <a href="index.html">
+                        <img src="images/logo.png" alt="Logo" width="160">
+                    </a>
+                </td>
+
+                <td align="right">
+                    <div class="auth-btn-container">
+                        <button id="open-auth-modal" class="auth-btn">Se connecter</button>
+                        <button id="logout-btn" class="logout-btn" style="display:none;">Se déconnecter</button>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <hr>
+    </header>
+
+        <main>
+                <div id="auth-modal" class="auth-modal-bg" style="display:none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card">
+                            <button class="close-modal-btn" id="close-auth-modal" aria-label="Fermer">&times;</button>
+                            <div class="auth-logo">
+                                <img src="images/logo.png" alt="Logo HBNB">
+                            </div>
+                            <h1>Connexion</h1>
+                            <br>
+                            <form action="#" method="post" class="auth-form">
+                                <label for="email">Adresse email</label>
+                                <input type="email" id="email" name="email" placeholder="exemple@email.com" required>
+                                <br>
+                                <label for="password">Mot de passe</label>
+                                <input type="password" id="password" name="password" placeholder="••••••••" required>
+                                <br>
+                                <button type="submit" class="auth-btn">Se connecter</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="main-content">
+                    <div id="logement-detail" class="logement-detail-card" style="display:none;"></div>
+                    <table id="logements-table" cellpadding="20" align="center">
+            <!-- Ligne 1 -->
+            <tr>
+                <td align="center" class="logement-tile" data-img="images/logement1.jpg" data-title="Appartement Moderne" data-ville="Toulouse, France">
+                        <img src="images/logement1.jpg" alt="Photo du logement">
+                    <h3>Appartement Moderne</h3>
+                    <p>Toulouse, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement2.jpg" data-title="Studio Cosy" data-ville="Paris, France">
+                        <img src="images/logement2.jpg" alt="Photo du logement">
+                    <h3>Studio Cosy</h3>
+                    <p>Paris, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement3.jpg" data-title="Maison Jardin" data-ville="Bordeaux, France">
+                        <img src="images/logement3.jpg" alt="Photo du logement">
+                    <h3>Maison Jardin</h3>
+                    <p>Bordeaux, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement4.jpg" data-title="Villa Luxe" data-ville="Nice, France">
+                        <img src="images/logement4.jpg" alt="Photo du logement">
+                    <h3>Villa Luxe</h3>
+                    <p>Nice, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement5.jpg" data-title="Loft Design" data-ville="Lyon, France">
+                        <img src="images/logement5.jpg" alt="Photo du logement">
+                    <h3>Loft Design</h3>
+                    <p>Lyon, France</p>
+                </td>
+            </tr>
+
+            <!-- Ligne 2 -->
+            <tr>
+                <td align="center" class="logement-tile" data-img="images/logement6.jpg" data-title="Chalet Montagne" data-ville="Chamonix, France">
+                        <img src="images/logement6.jpg" alt="Photo du logement">
+                    <h3>Chalet Montagne</h3>
+                    <p>Chamonix, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement7.jpg" data-title="Appartement Vue Mer" data-ville="Marseille, France">
+                        <img src="images/logement7.jpg" alt="Photo du logement">
+                    <h3>Appartement Vue Mer</h3>
+                    <p>Marseille, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement8.jpg" data-title="Studio Étudiant" data-ville="Lille, France">
+                        <img src="images/logement8.jpg" alt="Photo du logement">
+                    <h3>Studio Étudiant</h3>
+                    <p>Lille, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement9.jpg" data-title="Maison Familiale" data-ville="Nantes, France">
+                        <img src="images/logement9.jpg" alt="Photo du logement">
+                    <h3>Maison Familiale</h3>
+                    <p>Nantes, France</p>
+                </td>
+
+                <td align="center" class="logement-tile" data-img="images/logement10.jpg" data-title="Duplex Élégant" data-ville="Strasbourg, France">
+                        <img src="images/logement10.jpg" alt="Photo du logement">
+                    <h3>Duplex Élégant</h3>
+                    <p>Strasbourg, France</p>
+                </td>
+            </tr>
+        </table>
+    </main>
+    <footer>
+        <hr>
+        <div style="display: flex; justify-content: center; align-items: center; position: relative; min-height: 40px;">
+            <span style="position: absolute; right: 0;">
+                <a href="https://github.com/tomvieilledent">About Us</a> |
+                <a href="https://www.linkedin.com/in/tom-vieilledent-51a838199">Contact Us</a>
+            </span>
+            <span style="margin: 0 auto; font-weight: bold;">Tom Vieilledent - Holberton HBNB - 2026</span>
+        </div>
+    </footer>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+            // Gestion de la tuile de détail logement
+            var logementDetail = document.getElementById('logement-detail');
+            var logementsTable = document.getElementById('logements-table');
+            function showLogementDetail(img, title, ville) {
+                    logementDetail.innerHTML = `
+                        <div class="logement-detail-inner">
+                            <img src="${img}" alt="${title}" class="logement-detail-img">
+                            <div class="logement-detail-info">
+                                <h2>${title}</h2>
+                                <p>${ville}</p>
+                            </div>
+                        </div>
+                        <button class="close-detail-arrow" id="close-detail-arrow" aria-label="Fermer la fiche">&#8595;</button>
+                    `;
+                    logementDetail.classList.add('show-detail');
+                    logementDetail.style.display = 'flex';
+                    setTimeout(function() {
+                        logementDetail.classList.add('visible');
+                        logementsTable.classList.add('shifted');
+                    }, 10);
+                    logementDetail.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    document.getElementById('close-detail-arrow').onclick = function() {
+                        logementDetail.classList.remove('visible');
+                        logementsTable.classList.remove('shifted');
+                        setTimeout(function() {
+                            logementDetail.classList.remove('show-detail');
+                            logementDetail.style.display = 'none';
+                        }, 350);
+                    };
+            }
+            document.querySelectorAll('.logement-tile').forEach(function(tile) {
+                    tile.addEventListener('click', function() {
+                            showLogementDetail(
+                                    tile.getAttribute('data-img'),
+                                    tile.getAttribute('data-title'),
+                                    tile.getAttribute('data-ville')
+                            );
+                    });
+            });
+    var openBtn = document.getElementById('open-auth-modal');
+    var logoutBtn = document.getElementById('logout-btn');
+    var authModal = document.getElementById('auth-modal');
+    var mainContent = document.getElementById('main-content');
+    var closeBtn = document.getElementById('close-auth-modal');
+    var loginForm = document.querySelector('.auth-form');
+    var closeTimeout = null;
+    var isConnected = false;
+
+    openBtn.onclick = function(e) {
+        e.preventDefault();
+        authModal.style.display = 'flex';
+        setTimeout(function() {
+            authModal.classList.add('visible');
+            document.querySelector('.auth-card').classList.add('visible');
+        }, 10);
+        mainContent.classList.add('blur-bg');
+        openBtn.classList.add('active');
+        if (closeTimeout) {
+            clearTimeout(closeTimeout);
+            closeTimeout = null;
+        }
+    };
+    // Fonction de fermeture
+    function closeAuthModal() {
+        authModal.classList.remove('visible');
+        document.querySelector('.auth-card').classList.remove('visible');
+        setTimeout(function() {
+            authModal.style.display = 'none';
+        }, 350);
+        mainContent.classList.remove('blur-bg');
+        if (!isConnected) {
+            openBtn.classList.remove('active');
+        }
+    }
+    // Ferme la modale avec la croix
+    closeBtn.onclick = function(e) {
+        e.preventDefault();
+        closeAuthModal();
+    };
+    // Ferme la modale si clic sur le fond
+    authModal.onclick = function(e) {
+        // Empêche la fermeture si le focus est sur un input du formulaire
+        var active = document.activeElement;
+        if (e.target === this && !(active && (active.id === 'email' || active.id === 'password'))) {
+            closeAuthModal();
+        }
+    };
+    // Connexion : cache le bouton connexion, affiche déconnexion
+    loginForm.onsubmit = function(e) {
+        e.preventDefault();
+        closeAuthModal();
+        openBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        openBtn.classList.remove('active');
+        isConnected = true;
+    };
+    // Déconnexion : inverse
+    logoutBtn.onclick = function(e) {
+        e.preventDefault();
+        logoutBtn.style.display = 'none';
+        openBtn.style.display = 'inline-block';
+        isConnected = false;
+        // Désactive le hover tant que la souris n'est pas ressortie
+        openBtn.classList.add('no-hover');
+    };
+    // Retire la classe no-hover au mouseleave
+    openBtn.addEventListener('mouseleave', function() {
+        openBtn.classList.remove('no-hover');
+    });
+});
+</script>
+</body>
+
+</html>
