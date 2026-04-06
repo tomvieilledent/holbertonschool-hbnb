@@ -629,6 +629,7 @@ footer div {
   font-weight: 500;
   margin: 0;
   text-align: center;
+  font-size: 0.85rem;
 }
 
 .info-message {
@@ -636,4 +637,5 @@ footer div {
   font-weight: 500;
   margin: 0;
   text-align: center;
+  font-size: 0.85rem;
 }
