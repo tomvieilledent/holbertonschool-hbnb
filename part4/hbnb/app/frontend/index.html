@@ -74,8 +74,8 @@
                                 <input type="number" id="place-latitude" name="latitude" placeholder="48.8566" step="0.0001" required>
                                 <label for="place-longitude">Longitude</label>
                                 <input type="number" id="place-longitude" name="longitude" placeholder="2.3522" step="0.0001" required>
-                                <label for="place-amenities">Commodités (IDs séparés par virgules - optionnel)</label>
-                                <input type="text" id="place-amenities" name="amenities" placeholder="ID1,ID2">
+                                <label>Commodités (optionnel)</label>
+                                <div id="place-amenities-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;"></div>
                                 <button type="submit" class="auth-btn">Créer</button>
                             </form>
                         </div>
@@ -110,28 +110,49 @@
                     </div>
                 </div>
                 <div id="admin-panel-modal" class="auth-modal-bg" style="display:none;">
-                    <div class="center-auth-card">
-                        <div class="auth-card">
+                    <div class="center-auth-card" style="max-width: 600px;">
+                        <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
                             <h1>Panneau Admin</h1>
                             <hr>
-                            <h3>Créer un utilisateur</h3>
-                            <form id="admin-create-user-form" class="auth-form">
-                                <label for="admin-first-name">Prénom</label>
-                                <input type="text" id="admin-first-name" name="first_name" placeholder="Jean" required>
-                                <label for="admin-last-name">Nom</label>
-                                <input type="text" id="admin-last-name" name="last_name" placeholder="Dupont" required>
-                                <label for="admin-email">Email</label>
-                                <input type="email" id="admin-email" name="email" placeholder="jean@example.com" required>
-                                <label for="admin-password">Mot de passe</label>
-                                <input type="password" id="admin-password" name="password" placeholder="••••••••" required>
-                                <div style="margin: 15px 0;">
-                                    <label for="admin-is-admin" style="display: flex; align-items: center; cursor: pointer;">
-                                        <input type="checkbox" id="admin-is-admin" name="is_admin" style="margin-right: 10px; width: auto;">
-                                        <span>Cet utilisateur est administrateur</span>
-                                    </label>
-                                </div>
-                                <button type="submit" class="auth-btn">Créer l'utilisateur</button>
-                            </form>
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <button id="admin-tab-users" class="admin-tab-btn active" style="flex: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">👤 Utilisateurs</button>
+                                <button id="admin-tab-amenities" class="admin-tab-btn" style="flex: 1; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔧 Amenities</button>
+                            </div>
+                            
+                            <!-- Section Utilisateurs -->
+                            <div id="admin-users-section" style="display: block;">
+                                <h3>Créer un utilisateur</h3>
+                                <form id="admin-create-user-form" class="auth-form">
+                                    <label for="admin-first-name">Prénom</label>
+                                    <input type="text" id="admin-first-name" name="first_name" placeholder="Jean" required>
+                                    <label for="admin-last-name">Nom</label>
+                                    <input type="text" id="admin-last-name" name="last_name" placeholder="Dupont" required>
+                                    <label for="admin-email">Email</label>
+                                    <input type="email" id="admin-email" name="email" placeholder="jean@example.com" required>
+                                    <label for="admin-password">Mot de passe</label>
+                                    <input type="password" id="admin-password" name="password" placeholder="••••••••" required>
+                                    <div style="margin: 15px 0;">
+                                        <label for="admin-is-admin" style="display: flex; align-items: center; cursor: pointer;">
+                                            <input type="checkbox" id="admin-is-admin" name="is_admin" style="margin-right: 10px; width: auto;">
+                                            <span>Cet utilisateur est administrateur</span>
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="auth-btn">Créer l'utilisateur</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Section Amenities -->
+                            <div id="admin-amenities-section" style="display: none;">
+                                <h3>Créer une amenity</h3>
+                                <form id="admin-create-amenity-form" class="auth-form">
+                                    <label for="admin-amenity-name">Nom de l'amenity</label>
+                                    <input type="text" id="admin-amenity-name" name="name" placeholder="ex: WiFi, Piscine, Jardin..." required>
+                                    <button type="submit" class="auth-btn">Créer l'amenity</button>
+                                </form>
+                                <hr style="margin: 20px 0;">
+                                <h3>Amenities existantes</h3>
+                                <div id="amenities-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -454,6 +475,169 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
     
+    // Gestion des onglets du panneau admin
+    const adminTabUsers = document.getElementById('admin-tab-users');
+    const adminTabAmenities = document.getElementById('admin-tab-amenities');
+    const adminUsersSection = document.getElementById('admin-users-section');
+    const adminAmenitiesSection = document.getElementById('admin-amenities-section');
+    const adminCreateAmenityForm = document.getElementById('admin-create-amenity-form');
+    
+    adminTabUsers.onclick = function(e) {
+        e.preventDefault();
+        // Afficher section utilisateurs, masquer amenities
+        adminUsersSection.style.display = 'block';
+        adminAmenitiesSection.style.display = 'none';
+        // Mettre à jour styles des onglets
+        adminTabUsers.style.backgroundColor = '#007bff';
+        adminTabAmenities.style.backgroundColor = '#6c757d';
+    };
+    
+    adminTabAmenities.onclick = function(e) {
+        e.preventDefault();
+        // Afficher section amenities, masquer utilisateurs
+        adminUsersSection.style.display = 'none';
+        adminAmenitiesSection.style.display = 'block';
+        // Mettre à jour styles des onglets
+        adminTabUsers.style.backgroundColor = '#6c757d';
+        adminTabAmenities.style.backgroundColor = '#007bff';
+        // Charger les amenities existantes
+        loadAmenities();
+    };
+    
+    // Fonction pour charger et afficher les amenities existantes
+    function loadAmenities() {
+        const amenitiesList = document.getElementById('amenities-list');
+        amenitiesList.innerHTML = '<p>Chargement...</p>';
+        
+        fetch('http://127.0.0.1:5000/api/v1/amenities/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(amenities => {
+            if (!amenities || amenities.length === 0) {
+                amenitiesList.innerHTML = '<p style="color: #999;">Aucune amenity existante</p>';
+            } else {
+                amenitiesList.innerHTML = amenities.map(amenity => `
+                    <div style="padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="flex: 1;">${amenity.name}</span>
+                        <span style="color: #999; font-size: 0.85rem;">(${amenity.id.substring(0, 8)}...)</span>
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(error => {
+            amenitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des amenities</p>';
+            console.error('Erreur:', error);
+        });
+    }
+    
+    // Soumission du formulaire de création d'amenity
+    adminCreateAmenityForm.onsubmit = function(e) {
+        e.preventDefault();
+        
+        const amenityName = document.getElementById('admin-amenity-name').value;
+        const submitBtn = adminCreateAmenityForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Création...';
+        
+        const token = localStorage.getItem('access_token');
+        
+        fetch('http://127.0.0.1:5000/api/v1/amenities/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: amenityName
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || data.error || 'Erreur de création');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Amenity créée avec succès!');
+            adminCreateAmenityForm.reset();
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            // Recharger la liste
+            loadAmenities();
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            alert('Erreur: ' + error.message);
+            console.error('Erreur de création:', error);
+        });
+    };
+    
+    // Fonction pour charger et afficher les amenities comme checkboxes pour les places
+    function loadAmenitiesForPlace(containerId) {
+        const amenitiesList = document.getElementById(containerId);
+        amenitiesList.innerHTML = '<p style="grid-column: 1/-1;">Chargement...</p>';
+        
+        fetch('http://127.0.0.1:5000/api/v1/amenities/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(amenities => {
+            if (!amenities || amenities.length === 0) {
+                amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Aucune amenity disponible</p>';
+            } else {
+                amenitiesList.innerHTML = amenities.map(amenity => `
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="amenity-${amenity.id}" name="place-amenity" value="${amenity.id}" style="margin-right: 8px; width: auto;">
+                        <label for="amenity-${amenity.id}" style="margin: 0; cursor: pointer;">${amenity.name}</label>
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(error => {
+            amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: red;">Erreur lors du chargement des amenities</p>';
+            console.error('Erreur:', error);
+        });
+    }
+    
+    // Fonction pour charger et afficher les amenities en presélectionnant ceux de la place
+    function loadAmenitiesForEditPlace(containerId, placeAmenities) {
+        const amenitiesList = document.getElementById(containerId);
+        amenitiesList.innerHTML = '<p style="grid-column: 1/-1;">Chargement...</p>';
+        
+        fetch('http://127.0.0.1:5000/api/v1/amenities/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(amenities => {
+            if (!amenities || amenities.length === 0) {
+                amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Aucune amenity disponible</p>';
+            } else {
+                // Créer un Set des IDs du place pour comparaison rapide
+                const placeAmenityIds = new Set((placeAmenities || []).map(a => a.id || a));
+                
+                amenitiesList.innerHTML = amenities.map(amenity => `
+                    <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="edit-amenity-${amenity.id}" name="place-amenity" value="${amenity.id}" ${placeAmenityIds.has(amenity.id) ? 'checked' : ''} style="margin-right: 8px; width: auto;">
+                        <label for="edit-amenity-${amenity.id}" style="margin: 0; cursor: pointer;">${amenity.name}</label>
+                    </div>
+                `).join('');
+            }
+        })
+        .catch(error => {
+            amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: red;">Erreur lors du chargement des amenities</p>';
+            console.error('Erreur:', error);
+        });
+    }
+    
     // Gestion de la modale de création de place
     createPlaceBtn.onclick = function(e) {
         e.preventDefault();
@@ -463,6 +647,8 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#create-place-modal .auth-card')[0].classList.add('visible');
         }, 10);
         mainContent.classList.add('blur-bg');
+        // Charger les amenities
+        loadAmenitiesForPlace('place-amenities-list');
     };
     
     // Ferme la modale de création si clic sur le fond
@@ -481,8 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const price = parseFloat(document.getElementById('place-price').value);
         const latitude = parseFloat(document.getElementById('place-latitude').value);
         const longitude = parseFloat(document.getElementById('place-longitude').value);
-        const amenitiesStr = document.getElementById('place-amenities').value.trim();
-        const amenities = amenitiesStr ? amenitiesStr.split(',').map(id => id.trim()) : [];
+        const amenities = Array.from(document.querySelectorAll('input[name="place-amenity"]:checked')).map(checkbox => checkbox.value);
         
         // Sélectionner une image aléatoire parmi les logements
         const logementImages = [
@@ -1233,6 +1418,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <input type="number" id="edit-place-latitude" name="latitude" value="${place.latitude}" step="0.0001" required>
                                 <label for="edit-place-longitude">Longitude</label>
                                 <input type="number" id="edit-place-longitude" name="longitude" value="${place.longitude}" step="0.0001" required>
+                                <label>Commodités (optionnel)</label>
+                                <div id="edit-place-amenities-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;"></div>
                                 <button type="submit" class="auth-btn">Enregistrer les modifications</button>
                             </form>
                         </div>
