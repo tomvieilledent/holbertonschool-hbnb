@@ -652,9 +652,20 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // Ferme la modale de création si clic sur le fond
+    // Fonction pour fermer la modale de création de place
+    function closePlaceModal() {
+        createPlaceModal.classList.remove('visible');
+        document.querySelectorAll('#create-place-modal .auth-card')[0].classList.remove('visible');
+        setTimeout(function() {
+            createPlaceModal.style.display = 'none';
+        }, 350);
+        mainContent.classList.remove('blur-bg');
+    }
+    
+    // Ferme la modale de création si clic sur le fond
     createPlaceModal.onclick = function(e) {
         if (e.target === this) {
-            closePlaceBtn.click();
+            closePlaceModal();
         }
     };
     
@@ -720,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
             createPlaceForm.reset();
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
-            closePlaceBtn.click();
+            closePlaceModal();
             loadPlaces(); // Recharger la liste des places
         })
         .catch(error => {
