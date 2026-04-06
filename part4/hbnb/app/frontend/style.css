@@ -1,6 +1,6 @@
 /*Animation du tableau de tuiles lors de l'ouverture de la tuile détaillée */
 #logements-table {
-  transition: transform 0.7s cubic-bezier(.22,1,.36,1);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 #logements-table.shifted {
   transform: translateY(160px);
@@ -10,7 +10,9 @@
   /* ...existing code... */
   opacity: 0;
   transform: translateY(-30px) scale(0.98);
-  transition: opacity 0.35s cubic-bezier(.4,0,.2,1), transform 0.35s cubic-bezier(.4,0,.2,1);
+  transition:
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
 }
 .logement-detail-card.show-detail {
@@ -35,8 +37,10 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .close-detail-arrow:hover {
   background: #c00;
@@ -47,9 +51,9 @@
   width: 98%;
   max-width: 1200px;
   margin: 40px auto 10px auto;
-  background: rgba(255,255,255,0.97);
+  background: rgba(255, 255, 255, 0.97);
   border-radius: 32px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13);
   padding: 48px 48px 28px 48px;
   display: flex;
   align-items: center;
@@ -63,7 +67,7 @@
   height: 300px;
   object-fit: cover;
   border-radius: 28px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
 }
 .logement-detail-info {
   flex: 1;
@@ -88,15 +92,14 @@ footer {
 #main-content {
   user-select: none;
 }
-*/ Empêche la sélection de texte sur la main page
-.main-content {
+*/ Empêche la sélection de texte sur la main page .main-content {
   user-select: none;
 }
 /* Animation d'apparition de la modale */
 .auth-modal-bg {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s cubic-bezier(.4,0,.2,1);
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .auth-modal-bg.visible {
   opacity: 1;
@@ -105,7 +108,9 @@ footer {
 .auth-card {
   opacity: 0;
   transform: translateY(40px) scale(0.98);
-  transition: opacity 0.35s cubic-bezier(.4,0,.2,1), transform 0.35s cubic-bezier(.4,0,.2,1);
+  transition:
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .auth-card.visible {
   opacity: 1;
@@ -130,7 +135,8 @@ footer {
   margin: 0;
   box-sizing: border-box;
 }
-.auth-btn.no-hover:hover, .auth-btn.no-hover.active {
+.auth-btn.no-hover:hover,
+.auth-btn.no-hover.active {
   background: #444 !important;
   color: #fff;
 }
@@ -149,20 +155,16 @@ footer {
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(200,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(200, 0, 0, 0.08);
   transition: background 1s;
   margin-left: 10px;
 }
 .logout-btn:hover {
   background: #444;
-  box-shadow: 0 4px 16px rgba(68,68,68,0.18);
+  box-shadow: 0 4px 16px rgba(68, 68, 68, 0.18);
 }
-/* Bouton principal (Register/Se connecter) */
-/* Bouton principal (Register/Se connecter) et bouton du formulaire */
-/* Boutons principaux avec ombre légère */
-.auth-btn,
-.auth-card button[type="submit"] {
-  background: #444;
+.create-place-btn {
+  background: #007bff;
   color: #fff;
   border: none;
   border-radius: 25px;
@@ -170,17 +172,51 @@ footer {
   font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: 0 4px 18px 0 rgba(68,68,68,0.13);
-  transition: background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.08);
+  transition: background 1s;
+  margin-left: 10px;
+  width: 180px;
+  height: 44px;
+  min-width: 180px;
+  max-width: 180px;
+  min-height: 44px;
+  max-height: 44px;
+  margin: 0;
+  box-sizing: border-box;
+  margin-left: 10px;
+}
+.create-place-btn:hover {
+  background: #0056b3;
+  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.18);
+}
+/* Bouton principal (Register/Se connecter) */
+/* Bouton principal (Register/Se connecter) et bouton du formulaire */
+/* Boutons principaux avec ombre légère */
+.auth-btn,
+.auth-card button[type='submit'] {
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 24px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 18px 0 rgba(68, 68, 68, 0.13);
+  transition:
+    background 0.3s,
+    box-shadow 0.3s;
+  margin-top: 5px;
 }
 /* Ombre rouge légère au hover */
 .auth-btn:hover,
-.auth-card button[type="submit"]:hover {
+.auth-card button[type='submit']:hover {
   background: #c00;
-  box-shadow: 0 4px 18px 0 rgba(200,0,0,0.16);
+  box-shadow: 0 4px 18px 0 rgba(200, 0, 0, 0.16);
 }
 /* --- Base et Reset --- */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -191,8 +227,8 @@ html, body {
 body {
   min-height: 100vh;
   background:
-    linear-gradient(rgba(255,255,255,0.35), rgba(255,255,255,0.35)),
-    url("images/fond.png");
+    linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.35)),
+    url('images/fond.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -201,17 +237,20 @@ body {
 }
 
 /* --- Header / Footer --- */
-header, footer {
+header,
+footer {
   padding: 10px 90px;
 }
 
-header a, footer a {
+header a,
+footer a {
   color: #333;
   text-decoration: none;
   font-weight: bold;
 }
 
-header a:hover, footer a:hover {
+header a:hover,
+footer a:hover {
   text-decoration: underline;
 }
 
@@ -219,7 +258,7 @@ header a:hover, footer a:hover {
 hr {
   border: none;
   height: 1px;
-  background-color: rgba(0,0,0,0.15);
+  background-color: rgba(0, 0, 0, 0.15);
 }
 
 /* --- Tableau principal (Logements) --- */
@@ -232,15 +271,17 @@ main td {
   background: rgba(255, 255, 255, 0.88);
   border-radius: 18px;
   padding: 18px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
   width: 260px;
   vertical-align: top;
 }
 
 main td:hover {
   transform: translateY(-15px);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
 }
 
 main td img {
@@ -271,7 +312,7 @@ main td p {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0, 0, 0, 0.25);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -281,13 +322,15 @@ main td p {
 
 .auth-card {
   width: 100%;
-  max-width: 430px;
+  max-width: 380px;
   background: rgba(255, 255, 255, 0.68);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255,255,255,0.35);
-  border-radius: 28px;
-  padding: 45px 35px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 20px;
+  padding: 12px 10px;
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
   text-align: center;
   position: relative;
@@ -295,7 +338,7 @@ main td p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 /* --- Éléments de Formulaire (Inputs & Boutons) --- */
@@ -303,8 +346,8 @@ main td p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  margin-top: 20px;
+  gap: 3px;
+  margin-top: 5px;
 }
 
 /* C'est ici qu'on gère l'arrondi (radius) */
@@ -313,18 +356,52 @@ main td p {
   width: 90%;
   margin: 0 auto;
   display: block;
-  padding: 14px 20px;
-  border-radius: 15px;
+  padding: 7px 12px;
+  border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   background: rgba(255, 255, 255, 0.5);
   text-align: center;
-  font-size: 1.08rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  font-size: 0.85rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 /* Placeholders centrés */
 .auth-card input::placeholder {
   text-align: center;
   opacity: 1;
+}
+/* Textarea pour les descriptions */
+.auth-card textarea {
+  width: 90%;
+  margin: 0 auto;
+  display: block;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 0.8rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  font-family: Arial, sans-serif;
+  resize: none;
+  height: 45px;
+}
+.auth-card textarea::placeholder {
+  opacity: 1;
+}
+.auth-card label {
+  font-size: 0.75rem;
+  color: #333;
+  margin: 2px 0 0 0;
+}
+.auth-card h1 {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+.auth-logo {
+  margin-bottom: 5px;
+}
+.auth-logo img {
+  max-width: 80px;
+  height: auto;
 }
 /* Croix de fermeture modale */
 .close-modal-btn {
@@ -333,7 +410,7 @@ main td p {
   right: 22px;
   width: 32px;
   height: 32px;
-  background: rgba(255,255,255,0.85);
+  background: rgba(255, 255, 255, 0.85);
   border: none;
   border-radius: 50%;
   font-size: 1.4rem;
@@ -345,8 +422,10 @@ main td p {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .close-modal-btn:hover {
   background: #c00;
@@ -356,11 +435,11 @@ main td p {
 /* Bouton déconnexion avec ombre rouge */
 .logout-btn {
   background: #c00;
-  box-shadow: 0 4px 18px 0 rgba(200,0,0,0.16);
+  box-shadow: 0 4px 18px 0 rgba(200, 0, 0, 0.16);
 }
 .logout-btn:hover {
   background: #444;
-  box-shadow: 0 4px 18px 0 rgba(68,68,68,0.13);
+  box-shadow: 0 4px 18px 0 rgba(68, 68, 68, 0.13);
 }
 .close-modal-btn:hover {
   color: #c00;
@@ -376,6 +455,8 @@ main td p {
   justify-content: center;
   align-items: center;
   min-height: 80vh;
+  padding: 20px 0;
+  overflow-y: auto;
 }
 
 footer div {

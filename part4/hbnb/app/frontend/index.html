@@ -22,6 +22,7 @@
                 <td align="right">
                     <div class="auth-btn-container">
                         <button id="open-auth-modal" class="auth-btn">Se connecter</button>
+                        <button id="create-place-btn" class="create-place-btn" style="display:none;">Créer une place</button>
                         <button id="logout-btn" class="logout-btn" style="display:none;">Se déconnecter</button>
                     </div>
                 </td>
@@ -53,75 +54,36 @@
                         </div>
                     </div>
                 </div>
+                <div id="create-place-modal" class="auth-modal-bg" style="display:none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card">
+                            <button class="close-modal-btn" id="close-place-modal" aria-label="Fermer">&times;</button>
+                            <div class="auth-logo">
+                                <img src="images/logo.png" alt="Logo HBNB">
+                            </div>
+                            <h1>Créer une place</h1>
+                            <br>
+                            <form action="#" method="post" id="create-place-form" class="auth-form">
+                                <label for="place-title">Titre</label>
+                                <input type="text" id="place-title" name="title" placeholder="Studio moderne" required>
+                                <label for="place-description">Description</label>
+                                <textarea id="place-description" name="description" placeholder="Décrivez..." rows="2"></textarea>
+                                <label for="place-price">Prix/nuit (€)</label>
+                                <input type="number" id="place-price" name="price" placeholder="80" step="0.01" required>
+                                <label for="place-latitude">Latitude</label>
+                                <input type="number" id="place-latitude" name="latitude" placeholder="48.8566" step="0.0001" required>
+                                <label for="place-longitude">Longitude</label>
+                                <input type="number" id="place-longitude" name="longitude" placeholder="2.3522" step="0.0001" required>
+                                <label for="place-amenities">Commodités (IDs séparés par virgules - optionnel)</label>
+                                <input type="text" id="place-amenities" name="amenities" placeholder="ID1,ID2">
+                                <button type="submit" class="auth-btn">Créer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <div id="main-content">
                     <div id="logement-detail" class="logement-detail-card" style="display:none;"></div>
-                    <table id="logements-table" cellpadding="20" align="center">
-            <!-- Ligne 1 -->
-            <tr>
-                <td align="center" class="logement-tile" data-img="images/logement1.jpg" data-title="Appartement Moderne" data-ville="Toulouse, France">
-                        <img src="images/logement1.jpg" alt="Photo du logement">
-                    <h3>Appartement Moderne</h3>
-                    <p>Toulouse, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement2.jpg" data-title="Studio Cosy" data-ville="Paris, France">
-                        <img src="images/logement2.jpg" alt="Photo du logement">
-                    <h3>Studio Cosy</h3>
-                    <p>Paris, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement3.jpg" data-title="Maison Jardin" data-ville="Bordeaux, France">
-                        <img src="images/logement3.jpg" alt="Photo du logement">
-                    <h3>Maison Jardin</h3>
-                    <p>Bordeaux, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement4.jpg" data-title="Villa Luxe" data-ville="Nice, France">
-                        <img src="images/logement4.jpg" alt="Photo du logement">
-                    <h3>Villa Luxe</h3>
-                    <p>Nice, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement5.jpg" data-title="Loft Design" data-ville="Lyon, France">
-                        <img src="images/logement5.jpg" alt="Photo du logement">
-                    <h3>Loft Design</h3>
-                    <p>Lyon, France</p>
-                </td>
-            </tr>
-
-            <!-- Ligne 2 -->
-            <tr>
-                <td align="center" class="logement-tile" data-img="images/logement6.jpg" data-title="Chalet Montagne" data-ville="Chamonix, France">
-                        <img src="images/logement6.jpg" alt="Photo du logement">
-                    <h3>Chalet Montagne</h3>
-                    <p>Chamonix, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement7.jpg" data-title="Appartement Vue Mer" data-ville="Marseille, France">
-                        <img src="images/logement7.jpg" alt="Photo du logement">
-                    <h3>Appartement Vue Mer</h3>
-                    <p>Marseille, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement8.jpg" data-title="Studio Étudiant" data-ville="Lille, France">
-                        <img src="images/logement8.jpg" alt="Photo du logement">
-                    <h3>Studio Étudiant</h3>
-                    <p>Lille, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement9.jpg" data-title="Maison Familiale" data-ville="Nantes, France">
-                        <img src="images/logement9.jpg" alt="Photo du logement">
-                    <h3>Maison Familiale</h3>
-                    <p>Nantes, France</p>
-                </td>
-
-                <td align="center" class="logement-tile" data-img="images/logement10.jpg" data-title="Duplex Élégant" data-ville="Strasbourg, France">
-                        <img src="images/logement10.jpg" alt="Photo du logement">
-                    <h3>Duplex Élégant</h3>
-                    <p>Strasbourg, France</p>
-                </td>
-            </tr>
-        </table>
+                    <table id="logements-table" cellpadding="20" align="center"></table>
     </main>
     <footer>
         <hr>
@@ -137,6 +99,29 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+            // Déclarer les variables au début
+            var openBtn = document.getElementById('open-auth-modal');
+            var logoutBtn = document.getElementById('logout-btn');
+            var createPlaceBtn = document.getElementById('create-place-btn');
+            var authModal = document.getElementById('auth-modal');
+            var createPlaceModal = document.getElementById('create-place-modal');
+            var mainContent = document.getElementById('main-content');
+            var closeBtn = document.getElementById('close-auth-modal');
+            var closePlaceBtn = document.getElementById('close-place-modal');
+            var loginForm = document.querySelector('.auth-form');
+            var createPlaceForm = document.getElementById('create-place-form');
+            var closeTimeout = null;
+            var isConnected = false;
+            
+            // Vérifier si l'utilisateur est déjà connecté
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                openBtn.style.display = 'none';
+                createPlaceBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'inline-block';
+                isConnected = true;
+            }
+            
             // Gestion de la tuile de détail logement
             var logementDetail = document.getElementById('logement-detail');
             var logementsTable = document.getElementById('logements-table');
@@ -167,25 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         }, 350);
                     };
             }
-            document.querySelectorAll('.logement-tile').forEach(function(tile) {
-                    tile.addEventListener('click', function() {
-                            showLogementDetail(
-                                    tile.getAttribute('data-img'),
-                                    tile.getAttribute('data-title'),
-                                    tile.getAttribute('data-ville')
-                            );
-                    });
-            });
-    var openBtn = document.getElementById('open-auth-modal');
-    var logoutBtn = document.getElementById('logout-btn');
-    var authModal = document.getElementById('auth-modal');
-    var mainContent = document.getElementById('main-content');
-    var closeBtn = document.getElementById('close-auth-modal');
-    var loginForm = document.querySelector('.auth-form');
-    var closeTimeout = null;
-    var isConnected = false;
-
-    openBtn.onclick = function(e) {
+            
+            // Gestion des clics sur les boutons
+            openBtn.onclick = function(e) {
         e.preventDefault();
         authModal.style.display = 'flex';
         setTimeout(function() {
@@ -227,22 +196,248 @@ document.addEventListener('DOMContentLoaded', function() {
     // Connexion : cache le bouton connexion, affiche déconnexion
     loginForm.onsubmit = function(e) {
         e.preventDefault();
-        closeAuthModal();
-        openBtn.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-        openBtn.classList.remove('active');
-        isConnected = true;
+        
+        // Récupérer les valeurs du formulaire
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const submitBtn = loginForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        
+        // Désactiver le bouton pendant la requête
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Connexion...';
+        
+        // Faire la requête POST au backend
+        fetch('http://127.0.0.1:5000/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Erreur de connexion');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Sauvegarder le token JWT
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('user_email', email);
+            
+            // Fermer la modale et mettre à jour l'interface
+            closeAuthModal();
+            openBtn.style.display = 'none';
+            createPlaceBtn.style.display = 'inline-block';
+            logoutBtn.style.display = 'inline-block';
+            openBtn.classList.remove('active');
+            isConnected = true;
+            
+            // Réinitialiser le formulaire
+            loginForm.reset();
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            
+            // Message de succès (optionnel)
+            alert('Connexion réussie!');
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            alert('Erreur: ' + error.message);
+            console.error('Erreur de connexion:', error);
+        });
     };
     // Déconnexion : inverse
     logoutBtn.onclick = function(e) {
         e.preventDefault();
+        // Vider le token et l'email du localStorage
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user_email');
+        
         logoutBtn.style.display = 'none';
+        createPlaceBtn.style.display = 'none';
         openBtn.style.display = 'inline-block';
         isConnected = false;
         // Désactive le hover tant que la souris n'est pas ressortie
         openBtn.classList.add('no-hover');
+        alert('Vous avez été déconnecté!');
     };
-    // Retire la classe no-hover au mouseleave
+    
+    // Gestion de la modale de création de place
+    createPlaceBtn.onclick = function(e) {
+        e.preventDefault();
+        createPlaceModal.style.display = 'flex';
+        setTimeout(function() {
+            createPlaceModal.classList.add('visible');
+            document.querySelectorAll('#create-place-modal .auth-card')[0].classList.add('visible');
+        }, 10);
+        mainContent.classList.add('blur-bg');
+    };
+    
+    // Ferme la modale de création avec la croix
+    closePlaceBtn.onclick = function(e) {
+        e.preventDefault();
+        createPlaceModal.classList.remove('visible');
+        document.querySelectorAll('#create-place-modal .auth-card')[0].classList.remove('visible');
+        setTimeout(function() {
+            createPlaceModal.style.display = 'none';
+        }, 350);
+        mainContent.classList.remove('blur-bg');
+    };
+    
+    // Ferme la modale de création si clic sur le fond
+    createPlaceModal.onclick = function(e) {
+        if (e.target === this) {
+            closePlaceBtn.click();
+        }
+    };
+    
+    // Soumission du formulaire de création de place
+    createPlaceForm.onsubmit = function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('place-title').value;
+        const description = document.getElementById('place-description').value;
+        const price = parseFloat(document.getElementById('place-price').value);
+        const latitude = parseFloat(document.getElementById('place-latitude').value);
+        const longitude = parseFloat(document.getElementById('place-longitude').value);
+        const amenitiesStr = document.getElementById('place-amenities').value.trim();
+        const amenities = amenitiesStr ? amenitiesStr.split(',').map(id => id.trim()) : [];
+        
+        // Sélectionner une image aléatoire parmi les logements
+        const logementImages = [
+            'images/logement1.jpg',
+            'images/logement2.jpg',
+            'images/logement3.jpg',
+            'images/logement4.jpg',
+            'images/logement5.jpg',
+            'images/logement6.jpg',
+            'images/logement7.jpg',
+            'images/logement8.jpg',
+            'images/logement9.jpg',
+            'images/logement10.jpg'
+        ];
+        const randomImage = logementImages[Math.floor(Math.random() * logementImages.length)];
+        
+        const submitBtn = createPlaceForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Création...';
+        
+        const token = localStorage.getItem('access_token');
+        
+        fetch('http://127.0.0.1:5000/api/v1/places/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title,
+                description,
+                price,
+                latitude,
+                longitude,
+                amenities
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || data.error || 'Erreur de création');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Place créée avec succès!');
+            createPlaceForm.reset();
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            closePlaceBtn.click();
+            loadPlaces(); // Recharger la liste des places
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            alert('Erreur: ' + error.message);
+            console.error('Erreur de création:', error);
+        });
+    };
+    
+    // Fonction pour charger et afficher les places depuis l'API
+    function loadPlaces() {
+        fetch('http://127.0.0.1:5000/api/v1/places/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(places => {
+            logementsTable.innerHTML = ''; // Vider la table
+            
+            if (!places || places.length === 0) {
+                logementsTable.innerHTML = '<tr><td colspan="5" align="center"><p>Aucune place disponible</p></td></tr>';
+                return;
+            }
+            
+            // Construire le tableau avec 5 colonnes par ligne
+            let currentRow = null;
+            places.forEach((place, index) => {
+                // Créer une nouvelle ligne tous les 5 éléments
+                if (index % 5 === 0) {
+                    currentRow = document.createElement('tr');
+                    logementsTable.appendChild(currentRow);
+                }
+                
+                // Générer une image aléatoire basée sur l'ID (pour la consistance)
+                const logementIndex = (parseInt(place.id.split('-')[0]) || index) % 10;
+                const imgSrc = `images/logement${logementIndex + 1}.jpg`;
+                
+                // Créer la cellule
+                const td = document.createElement('td');
+                td.align = 'center';
+                td.className = 'logement-tile';
+                td.setAttribute('data-img', imgSrc);
+                td.setAttribute('data-title', place.title);
+                td.setAttribute('data-ville', place.title); // Utiliser le titre ou latitude/longitude
+                
+                td.innerHTML = `
+                    <img src="${imgSrc}" alt="${place.title}">
+                    <h3>${place.title}</h3>
+                    <p>${place.price}€/nuit</p>
+                `;
+                
+                currentRow.appendChild(td);
+            });
+            
+            // Ajouter les event listeners aux tuiles
+            document.querySelectorAll('.logement-tile').forEach(function(tile) {
+                tile.addEventListener('click', function() {
+                    showLogementDetail(
+                        tile.getAttribute('data-img'),
+                        tile.getAttribute('data-title'),
+                        tile.getAttribute('data-ville')
+                    );
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des places:', error);
+            logementsTable.innerHTML = '<tr><td colspan="5" align="center"><p>Erreur lors du chargement des places</p></td></tr>';
+        });
+    }
+    
+    // Charger les places au démarrage
+    loadPlaces();
+            
+            // Retire la classe no-hover au mouseleave
     openBtn.addEventListener('mouseleave', function() {
         openBtn.classList.remove('no-hover');
     });

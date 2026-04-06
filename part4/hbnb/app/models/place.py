@@ -7,8 +7,10 @@ from sqlalchemy.orm import relationship
 
 place_amenity = db.Table(
     "place_amenity",
-    db.Column("place_id", db.String(36), db.ForeignKey("places.id"), primary_key=True),
-    db.Column("amenity_id", db.String(36), db.ForeignKey("amenities.id"), primary_key=True)
+    db.Column("place_id", db.String(36), db.ForeignKey(
+        "places.id"), primary_key=True),
+    db.Column("amenity_id", db.String(36), db.ForeignKey(
+        "amenities.id"), primary_key=True)
 )
 
 
@@ -20,28 +22,28 @@ class Place(BaseModel):
     _title = db.Column(
         db.String(100),
         nullable=False)
-    
+
     _description = db.Column(
         db.String(2000),
         nullable=False)
-    
+
     _price = db.Column(
         db.Numeric(10, 2),
         nullable=False)
-    
+
     _latitude = db.Column(
         db.Float,
         nullable=False)
-    
+
     _longitude = db.Column(
         db.Float,
         nullable=False)
-    
+
     user_id = db.Column(
         db.String(36),
         db.ForeignKey("users.id"),
         nullable=False)
-    
+
     owner = db.relationship(
         "User",
         back_populates="places",
@@ -58,7 +60,6 @@ class Place(BaseModel):
         secondary=place_amenity,
         back_populates="places",
         lazy="select")
-    
 
     def __init__(self, title, description, price, latitude, longitude, owner):
         """Create a place instance."""
@@ -73,7 +74,8 @@ class Place(BaseModel):
         self.owner = owner
 
 
-#region Title
+# region Title
+
     @property
     def title(self):
         """Return the place title."""
@@ -90,10 +92,11 @@ class Place(BaseModel):
         if len(title) > 100:
             raise ValueError("Title cannot exceed 100 characters.")
         self._title = title
-#endregion
+# endregion
 
 
-#region Description
+# region Description
+
     @property
     def description(self):
         """Return the place description."""
@@ -110,10 +113,11 @@ class Place(BaseModel):
         if len(description) > 2000:
             raise ValueError("Description cannot exceed 2000 characters.")
         self._description = description
-#endregion
+# endregion
 
 
-#region Price
+# region Price
+
     @property
     def price(self):
         """Return the nightly price."""
@@ -131,10 +135,11 @@ class Place(BaseModel):
         if price > Decimal('99999999.99'):
             raise ValueError("Price exceeds maximum allowed value.")
         self._price = price
-#endregion
+# endregion
 
 
-#region Latitude
+# region Latitude
+
     @property
     def latitude(self):
         """Return the latitude."""
@@ -148,10 +153,11 @@ class Place(BaseModel):
         if not (-90 <= float(latitude) <= 90):
             raise ValueError("Latitude must be in range -90 : 90.")
         self._latitude = float(latitude)
-#endregion
+# endregion
 
 
-#region Longitude
+# region Longitude
+
     @property
     def longitude(self):
         """Return the longitude."""
@@ -165,8 +171,7 @@ class Place(BaseModel):
         if not (-180 <= float(longitude) <= 180):
             raise ValueError("Longitude must be in range -180 : 180.")
         self._longitude = float(longitude)
-#endregion
-
+# endregion
 
     def add_review(self, review):
         """Add a review to the place."""
