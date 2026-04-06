@@ -42,7 +42,7 @@
                             </div>
                             <h1>Connexion</h1>
                             <br>
-                            <form action="#" method="post" class="auth-form">
+                            <form action="#" method="post" id="login-form" class="auth-form">
                                 <label for="email">Adresse email</label>
                                 <input type="email" id="email" name="email" placeholder="exemple@email.com" required>
                                 <br>
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var authModal = document.getElementById('auth-modal');
             var createPlaceModal = document.getElementById('create-place-modal');
             var mainContent = document.getElementById('main-content');
-            var loginForm = document.querySelector('.auth-form');
+            var loginForm = document.getElementById('login-form');
             var createPlaceForm = document.getElementById('create-place-form');
             var closeTimeout = null;
             var isConnected = false;
@@ -493,25 +493,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const token = localStorage.getItem('access_token');
         const userId = localStorage.getItem('user_id');
         
-        // Afficher d'abord le contenu de base
-        placeDetailContent.innerHTML = `
-            <div class="place-detail-header">
-                <img src="${imgSrc}" alt="${place.title}" style="width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
-                <h2>${place.title}</h2>
-                <p><strong>Prix:</strong> ${place.price}€/nuit</p>
-                <p><strong>Description:</strong> ${place.description || 'N/A'}</p>
-                <p><strong>Localisation:</strong> Lat ${place.latitude}, Lon ${place.longitude}</p>
-            </div>
-            
-            <hr style="margin: 15px 0;">
-            
-            <div id="reviews-list" class="reviews-section">
-                <h3>Avis</h3>
-                <p>Chargement des avis...</p>
-            </div>
-            
-            <div id="review-form-section"></div>
-        `;
+        // Afficher d'abord un message de chargement
+        placeDetailContent.innerHTML = `<p>Chargement...</p>`;
         
         placeDetailModal.style.display = 'flex';
         setTimeout(function() {
@@ -520,21 +503,50 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
         mainContent.classList.add('blur-bg');
         
-        // Charger les reviews pour cette place
-        fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+        // Récupérer les détails complets de la place
+        fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         })
-        .then(response => response.json())
-        .then(reviews => {
-            const reviewsList = document.getElementById('reviews-list');
+        .then(r => r.json())
+        .then(fullPlace => {
+            // Afficher les détails complets
+            placeDetailContent.innerHTML = `
+                <div class="place-detail-header">
+                    <img src="${imgSrc}" alt="${fullPlace.title}" style="width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
+                    <h2>${fullPlace.title}</h2>
+                    <p><strong>Prix:</strong> ${fullPlace.price}€/nuit</p>
+                    <p><strong>Description:</strong> ${fullPlace.description || 'N/A'}</p>
+                    <p><strong>Localisation:</strong> Lat ${fullPlace.latitude || 'N/A'}, Lon ${fullPlace.longitude || 'N/A'}</p>
+                </div>
+                
+                <hr style="margin: 15px 0;">
+                
+                <div id="reviews-list" class="reviews-section">
+                    <h3>Avis</h3>
+                    <p>Chargement des avis...</p>
+                </div>
+                
+                <div id="review-form-section"></div>
+            `;
             
-            if (!reviews || reviews.length === 0) {
-                reviewsList.innerHTML = '<h3>Avis</h3><p>Aucun avis pour le moment</p>';
-            } else {
-                let reviewsHTML = '<h3>Avis</h3>';
+            // Charger les reviews pour cette place
+            fetch(`http://127.0.0.1:5000/api/v1/places/${fullPlace.id}/reviews`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(reviews => {
+                const reviewsList = document.getElementById('reviews-list');
+                
+                if (!reviews || reviews.length === 0) {
+                    reviewsList.innerHTML = '<h3>Avis</h3><p>Aucun avis pour le moment</p>';
+                } else {
+                    let reviewsHTML = '<h3>Avis</h3>';
                 reviews.forEach(review => {
                     let reviewContent = `
                         <div class="review-item">
@@ -587,6 +599,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erreur lors du chargement des reviews:', error);
             document.getElementById('reviews-list').innerHTML = '<h3>Avis</h3><p>Erreur lors du chargement des avis</p>';
         });
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des détails:', error);
+            });
         
         // Section formulaire de review
         const formSection = document.getElementById('review-form-section');
@@ -925,12 +941,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             `;
                         }).join('');
 
-                        // Add view details handlers
+                        // Add view reviews handlers
                         document.querySelectorAll('.view-place-reviews-btn').forEach(btn => {
                             btn.addEventListener('click', function(e) {
                                 e.stopPropagation();
                                 const placeId = this.getAttribute('data-place-id');
-                                showPlaceEditModal(placeId);
+                                showPlaceReviewsModal(placeId);
                             });
                         });
 
@@ -967,6 +983,91 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Erreur:', error));
     }
 
+    // Show Place Reviews Modal
+    function showPlaceReviewsModal(placeId) {
+        fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(place => {
+            // Create reviews modal container
+            const reviewsModalHTML = `
+                <div id="place-reviews-modal" class="auth-modal-bg" style="display: none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                            <h1>${place.title}</h1>
+                            <hr>
+                            <h3>Avis (${place.reviews ? place.reviews.length : 0})</h3>
+                            <div id="reviews-modal-list" style="margin-top: 15px;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Insert the modal into the DOM
+            const existingModal = document.getElementById('place-reviews-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            document.body.insertAdjacentHTML('beforeend', reviewsModalHTML);
+            
+            // Show the modal
+            setTimeout(function() {
+                const reviewsModal = document.getElementById('place-reviews-modal');
+                if (reviewsModal) {
+                    reviewsModal.style.display = 'flex';
+                    setTimeout(function() {
+                        reviewsModal.classList.add('visible');
+                        reviewsModal.querySelector('.auth-card').classList.add('visible');
+                        mainContent.classList.add('blur-bg');
+                    }, 10);
+                }
+            }, 10);
+
+            // Populate reviews
+            setTimeout(function() {
+                const reviewsList = document.getElementById('reviews-modal-list');
+                if (reviewsList) {
+                    if (!place.reviews || place.reviews.length === 0) {
+                        reviewsList.innerHTML = '<p style="color: #666;">Aucun avis</p>';
+                    } else {
+                        reviewsList.innerHTML = place.reviews.map(review => `
+                            <div class="review-item" style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span class="review-rating">⭐ ${review.rating}/5</span>
+                                    <span class="review-user" style="font-size: 0.9rem;">${review.user?.first_name || 'Anonyme'}</span>
+                                </div>
+                                <p style="margin: 8px 0; color: #666; font-size: 0.9rem;">${review.text || ''}</p>
+                            </div>
+                        `).join('');
+                    }
+                }
+            }, 50);
+
+            // Handle close by clicking on background
+            setTimeout(function() {
+                const reviewsModal = document.getElementById('place-reviews-modal');
+                if (reviewsModal) {
+                    reviewsModal.addEventListener('click', function(e) {
+                        if (e.target === reviewsModal) {
+                            reviewsModal.classList.remove('visible');
+                            reviewsModal.querySelector('.auth-card').classList.remove('visible');
+                            setTimeout(function() {
+                                reviewsModal.remove();
+                                mainContent.classList.remove('blur-bg');
+                            }, 350);
+                        }
+                    });
+                }
+            }, 50);
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors du chargement des reviews');
+        });
+    }
+
     // Show Place Edit Modal
     function showPlaceEditModal(placeId) {
         const token = localStorage.getItem('access_token');
@@ -977,35 +1078,27 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(r => r.json())
         .then(place => {
-            // Create edit modal container
+            // Create edit modal container - SANS LES REVIEWS
             const editModalHTML = `
-                <div id="place-edit-modal" class="auth-modal-bg" style="display: flex;">
-                    <div class="center-auth-card" style="max-width: 1000px; width: 95%;">
-                        <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
+                <div id="place-edit-modal" class="auth-modal-bg" style="display: none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
                             <h1>${place.title}</h1>
                             <hr>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div>
-                                    <h3>Modifier la place</h3>
-                                    <form id="edit-place-form" class="auth-form">
-                                        <label for="edit-place-title">Titre</label>
-                                        <input type="text" id="edit-place-title" name="title" value="${place.title}" required>
-                                        <label for="edit-place-description">Description</label>
-                                        <textarea id="edit-place-description" name="description" rows="3">${place.description || ''}</textarea>
-                                        <label for="edit-place-price">Prix/nuit (€)</label>
-                                        <input type="number" id="edit-place-price" name="price" value="${place.price}" step="0.01" required>
-                                        <label for="edit-place-latitude">Latitude</label>
-                                        <input type="number" id="edit-place-latitude" name="latitude" value="${place.latitude}" step="0.0001" required>
-                                        <label for="edit-place-longitude">Longitude</label>
-                                        <input type="number" id="edit-place-longitude" name="longitude" value="${place.longitude}" step="0.0001" required>
-                                        <button type="submit" class="auth-btn">Enregistrer les modifications</button>
-                                    </form>
-                                </div>
-                                <div>
-                                    <h3>Avis (${place.reviews ? place.reviews.length : 0})</h3>
-                                    <div id="edit-reviews-list" style="max-height: 500px; overflow-y: auto;"></div>
-                                </div>
-                            </div>
+                            <h3>Modifier la place</h3>
+                            <form id="edit-place-form" class="auth-form">
+                                <label for="edit-place-title">Titre</label>
+                                <input type="text" id="edit-place-title" name="title" value="${place.title}" required>
+                                <label for="edit-place-description">Description</label>
+                                <textarea id="edit-place-description" name="description" rows="3">${place.description || ''}</textarea>
+                                <label for="edit-place-price">Prix/nuit (€)</label>
+                                <input type="number" id="edit-place-price" name="price" value="${place.price}" step="0.01" required>
+                                <label for="edit-place-latitude">Latitude</label>
+                                <input type="number" id="edit-place-latitude" name="latitude" value="${place.latitude}" step="0.0001" required>
+                                <label for="edit-place-longitude">Longitude</label>
+                                <input type="number" id="edit-place-longitude" name="longitude" value="${place.longitude}" step="0.0001" required>
+                                <button type="submit" class="auth-btn">Enregistrer les modifications</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -1017,60 +1110,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 existingModal.remove();
             }
             document.body.insertAdjacentHTML('beforeend', editModalHTML);
-            mainContent.classList.add('blur-bg');
-
-            // Populate reviews
-            const reviewsList = document.getElementById('edit-reviews-list');
-            if (!place.reviews || place.reviews.length === 0) {
-                reviewsList.innerHTML = '<p style="color: #666;">Aucun avis</p>';
-            } else {
-                reviewsList.innerHTML = place.reviews.map(review => `
-                    <div class="review-item" style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="review-rating">⭐ ${review.rating}/5</span>
-                            <span class="review-user" style="font-size: 0.9rem;">${review.user?.first_name || 'Anonyme'}</span>
-                        </div>
-                        <p style="margin: 8px 0; color: #666; font-size: 0.9rem;">${review.text || ''}</p>
-                    </div>
-                `).join('');
-            }
+            
+            // Show the modal
+            setTimeout(function() {
+                const editModal = document.getElementById('place-edit-modal');
+                if (editModal) {
+                    editModal.style.display = 'flex';
+                    setTimeout(function() {
+                        editModal.classList.add('visible');
+                        editModal.querySelector('.auth-card').classList.add('visible');
+                        mainContent.classList.add('blur-bg');
+                    }, 10);
+                }
+            }, 10);
 
             // Handle form submission
-            document.getElementById('edit-place-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = {
-                    title: document.getElementById('edit-place-title').value,
-                    description: document.getElementById('edit-place-description').value,
-                    price: parseFloat(document.getElementById('edit-place-price').value),
-                    latitude: parseFloat(document.getElementById('edit-place-latitude').value),
-                    longitude: parseFloat(document.getElementById('edit-place-longitude').value)
-                };
+            setTimeout(function() {
+                const editForm = document.getElementById('edit-place-form');
+                if (editForm) {
+                    editForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const formData = {
+                            title: document.getElementById('edit-place-title').value,
+                            description: document.getElementById('edit-place-description').value,
+                            price: parseFloat(document.getElementById('edit-place-price').value),
+                            latitude: parseFloat(document.getElementById('edit-place-latitude').value),
+                            longitude: parseFloat(document.getElementById('edit-place-longitude').value)
+                        };
 
-                fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Place mise à jour avec succès');
-                        document.getElementById('place-edit-modal').remove();
-                        mainContent.classList.remove('blur-bg');
-                        loadMyPlaces();
-                    } else {
-                        return response.json().then(data => {
-                            alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                        fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(formData)
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                alert('Place mise à jour avec succès');
+                                const editModal = document.getElementById('place-edit-modal');
+                                if (editModal) {
+                                    editModal.classList.remove('visible');
+                                    editModal.querySelector('.auth-card').classList.remove('visible');
+                                    setTimeout(function() {
+                                        editModal.remove();
+                                        mainContent.classList.remove('blur-bg');
+                                        loadMyPlaces();
+                                    }, 350);
+                                }
+                            } else {
+                                return response.json().then(data => {
+                                    alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            alert('Erreur: ' + error.message);
+                            console.error('Erreur:', error);
                         });
-                    }
-                })
-                .catch(error => {
-                    alert('Erreur: ' + error.message);
-                    console.error('Erreur:', error);
-                });
-            });
+                    });
+                }
+            }, 50);
 
             // Handle close by clicking on background
             setTimeout(function() {
@@ -1078,8 +1179,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (editModal) {
                     editModal.addEventListener('click', function(e) {
                         if (e.target === editModal) {
-                            editModal.remove();
-                            mainContent.classList.remove('blur-bg');
+                            editModal.classList.remove('visible');
+                            editModal.querySelector('.auth-card').classList.remove('visible');
+                            setTimeout(function() {
+                                editModal.remove();
+                                mainContent.classList.remove('blur-bg');
+                            }, 350);
                         }
                     });
                 }
