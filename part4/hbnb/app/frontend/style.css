@@ -462,3 +462,178 @@ main td p {
 footer div {
   padding: 15px 0;
 }
+
+/* Styles pour la modale de détail de place */
+.place-detail-header {
+  margin-bottom: 15px;
+}
+
+.place-detail-header h2 {
+  font-size: 1.4rem;
+  margin: 10px 0 8px 0;
+  color: #333;
+}
+
+.place-detail-header p {
+  font-size: 0.9rem;
+  margin: 6px 0;
+  color: #666;
+  word-break: break-word;
+}
+
+.review-section {
+  margin-top: 15px;
+}
+
+.review-section h3 {
+  font-size: 1.1rem;
+  margin: 10px 0;
+  color: #333;
+}
+
+#review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#review-form label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+#review-form select,
+#review-form textarea {
+  width: 90%;
+  margin: 0 auto;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  font-family: Arial, sans-serif;
+}
+
+#review-form select {
+  cursor: pointer;
+  height: 38px;
+}
+
+#review-form textarea {
+  resize: none;
+  min-height: 70px;
+}
+
+#review-form button {
+  width: 90%;
+  margin: 10px auto 0;
+}
+
+/* Styles pour les avis */
+.reviews-section {
+  margin-bottom: 15px;
+}
+
+.reviews-section h3 {
+  font-size: 1.1rem;
+  margin: 10px 0;
+  color: #333;
+}
+
+.review-item {
+  background: rgba(240, 240, 240, 0.5);
+  border-left: 3px solid #007bff;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: 4px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-rating {
+  font-weight: bold;
+  color: #ff9800;
+  font-size: 0.9rem;
+}
+
+.review-user {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.review-text {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.login-prompt {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 15px;
+}
+
+/* Styles pour les actions de review */
+.review-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.review-edit-btn,
+.review-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.review-edit-btn:hover {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.review-delete-btn:hover {
+  background: rgba(255, 0, 0, 0.2);
+}
+
+/* Messages d'erreur et d'info */
+.error-section,
+.info-section {
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.error-section {
+  background: rgba(255, 200, 200, 0.3);
+  border-left: 3px solid #c00;
+}
+
+.error-message {
+  color: #c00;
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}
+
+.info-message {
+  color: #007bff;
+  font-weight: 500;
+  margin: 0;
+  text-align: center;
+}

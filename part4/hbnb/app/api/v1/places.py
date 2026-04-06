@@ -81,6 +81,11 @@ place_update_model = api.model('PlaceUpdate', {
     'amenities': fields.List(fields.String, required=False, description="List of amenities ID's")
 })
 
+place_review_create_model = api.model('PlaceReviewCreate', {
+    'text': fields.String(required=True, description='Text of the review'),
+    'rating': fields.Integer(required=True, description='Rating of the place (1-5)')
+})
+
 
 @api.route('/')
 class PlaceList(Resource):
@@ -221,7 +226,7 @@ class PlaceResource(Resource):
 
 @api.route('/<place_id>/reviews')
 class PlaceReviewList(Resource):
-    """Endpoint to list reviews for a place."""
+    """Endpoint to list and create reviews for a place."""
 
     @api.response(200, 'List of reviews for the place retrieved successfully')
     @api.response(404, 'Place not found')
@@ -236,7 +241,57 @@ class PlaceReviewList(Resource):
             {
                 'id': review.id,
                 'text': review.text,
-                'rating': review.rating
+                'rating': review.rating,
+                'user_id': review.user.id if review.user else None,
+                'user': {
+                    'first_name': review.user.first_name if review.user else None,
+                    'last_name': review.user.last_name if review.user else None,
+                    'email': review.user.email if review.user else None,
+                } if review.user else None
             }
             for review in reviews
         ], 200
+
+    @api.expect(place_review_create_model)
+    @api.response(201, 'Review successfully created')
+    @api.response(400, 'Invalid input data')
+    @api.response(404, 'Place not found')
+    @jwt_required()
+    def post(self, place_id):
+        """Create a review for a place"""
+        current_user = get_jwt_identity()
+        data = api.payload or {}
+
+        place = facade.get_place(place_id)
+        if not place:
+            return {'message': 'Place not found'}, 404
+
+        if place.owner and str(current_user) == str(place.owner.id):
+            return {'message': 'You cannot review your own place.'}, 400
+
+        existing_reviews = facade.get_reviews_by_place(place_id)
+        if any(str(r.user.id) == str(current_user) for r in existing_reviews):
+            return {'message': 'You have already reviewed this place.'}, 400
+
+        user = facade.get_user(current_user)
+        if not user:
+            return {'message': 'User not found'}, 404
+
+        review_data = {
+            'text': data.get('text', ''),
+            'rating': data.get('rating'),
+            'place': place,
+            'user': user
+        }
+
+        try:
+            review = facade.create_review(review_data)
+            return {
+                'id': review.id,
+                'text': review.text,
+                'rating': review.rating,
+                'user_id': review.user.id,
+                'place_id': review.place.id
+            }, 201
+        except (TypeError, ValueError) as e:
+            return {'message': str(e)}, 400

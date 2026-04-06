@@ -81,6 +81,14 @@
                         </div>
                     </div>
                 </div>
+                <div id="place-detail-modal" class="auth-modal-bg" style="display:none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card" id="place-detail-card">
+                            <button class="close-modal-btn" id="close-place-detail-modal" aria-label="Fermer">&times;</button>
+                            <div id="place-detail-content"></div>
+                        </div>
+                    </div>
+                </div>
                 <div id="main-content">
                     <div id="logement-detail" class="logement-detail-card" style="display:none;"></div>
                     <table id="logements-table" cellpadding="20" align="center"></table>
@@ -112,6 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var createPlaceForm = document.getElementById('create-place-form');
             var closeTimeout = null;
             var isConnected = false;
+            var placeDetailModal = document.getElementById('place-detail-modal');
+            var closePlaceDetailBtn = document.getElementById('close-place-detail-modal');
             
             // Vérifier si l'utilisateur est déjà connecté
             const token = localStorage.getItem('access_token');
@@ -224,9 +234,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Sauvegarder le token JWT
+            // Sauvegarder le token JWT et l'ID utilisateur
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('user_email', email);
+            localStorage.setItem('user_id', data.user_id);
             
             // Fermer la modale et mettre à jour l'interface
             closeAuthModal();
@@ -254,9 +265,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Déconnexion : inverse
     logoutBtn.onclick = function(e) {
         e.preventDefault();
-        // Vider le token et l'email du localStorage
+        // Vider le token, l'email et l'ID de l'utilisateur du localStorage
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_email');
+        localStorage.removeItem('user_id');
         
         logoutBtn.style.display = 'none';
         createPlaceBtn.style.display = 'none';
@@ -406,6 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 td.className = 'logement-tile';
                 td.setAttribute('data-img', imgSrc);
                 td.setAttribute('data-title', place.title);
+                td.setAttribute('data-place-id', place.id);
                 td.setAttribute('data-ville', place.title); // Utiliser le titre ou latitude/longitude
                 
                 td.innerHTML = `
@@ -414,17 +427,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p>${place.price}€/nuit</p>
                 `;
                 
+                // Stocker l'objet place complet pour l'utiliser au clic
+                td.placeData = place;
+                td.imgSrc = imgSrc;
+                
                 currentRow.appendChild(td);
             });
             
             // Ajouter les event listeners aux tuiles
             document.querySelectorAll('.logement-tile').forEach(function(tile) {
                 tile.addEventListener('click', function() {
-                    showLogementDetail(
-                        tile.getAttribute('data-img'),
-                        tile.getAttribute('data-title'),
-                        tile.getAttribute('data-ville')
-                    );
+                    showPlaceDetailModal(tile.placeData, tile.imgSrc);
                 });
             });
         })
@@ -432,6 +445,347 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erreur lors du chargement des places:', error);
             logementsTable.innerHTML = '<tr><td colspan="5" align="center"><p>Erreur lors du chargement des places</p></td></tr>';
         });
+    }
+        // Ferme la modale de détail avec la croix
+    closePlaceDetailBtn.onclick = function(e) {
+        e.preventDefault();
+        placeDetailModal.classList.remove('visible');
+        document.getElementById('place-detail-card').classList.remove('visible');
+        setTimeout(function() {
+            placeDetailModal.style.display = 'none';
+        }, 350);
+        mainContent.classList.remove('blur-bg');
+    };
+    
+    // Ferme la modale de détail si clic sur le fond
+    placeDetailModal.onclick = function(e) {
+        if (e.target === this) {
+            closePlaceDetailBtn.click();
+        }
+    };
+    
+    // Fonction pour afficher les détails complets d'une place avec un formulaire de review
+    function showPlaceDetailModal(place, imgSrc) {
+        const placeDetailContent = document.getElementById('place-detail-content');
+        const token = localStorage.getItem('access_token');
+        const userId = localStorage.getItem('user_id');
+        
+        // Afficher d'abord le contenu de base
+        placeDetailContent.innerHTML = `
+            <div class="place-detail-header">
+                <img src="${imgSrc}" alt="${place.title}" style="width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
+                <h2>${place.title}</h2>
+                <p><strong>Prix:</strong> ${place.price}€/nuit</p>
+                <p><strong>Description:</strong> ${place.description || 'N/A'}</p>
+                <p><strong>Localisation:</strong> Lat ${place.latitude}, Lon ${place.longitude}</p>
+            </div>
+            
+            <hr style="margin: 15px 0;">
+            
+            <div id="reviews-list" class="reviews-section">
+                <h3>Avis</h3>
+                <p>Chargement des avis...</p>
+            </div>
+            
+            <div id="review-form-section"></div>
+        `;
+        
+        placeDetailModal.style.display = 'flex';
+        setTimeout(function() {
+            placeDetailModal.classList.add('visible');
+            document.getElementById('place-detail-card').classList.add('visible');
+        }, 10);
+        mainContent.classList.add('blur-bg');
+        
+        // Charger les reviews pour cette place
+        fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(reviews => {
+            const reviewsList = document.getElementById('reviews-list');
+            
+            if (!reviews || reviews.length === 0) {
+                reviewsList.innerHTML = '<h3>Avis</h3><p>Aucun avis pour le moment</p>';
+            } else {
+                let reviewsHTML = '<h3>Avis</h3>';
+                reviews.forEach(review => {
+                    let reviewContent = `
+                        <div class="review-item">
+                            <div class="review-header">
+                                <span class="review-rating">⭐ ${review.rating}/5</span>
+                                <span class="review-user">${review.user?.first_name || 'Anonyme'}</span>
+                    `;
+                    
+                    // Ajouter les boutons modifier/supprimer si c'est la review de l'utilisateur connecté
+                    if (token && userId && review.user_id === userId) {
+                        reviewContent += `
+                            <div class="review-actions">
+                                <button class="review-edit-btn" data-review-id="${review.id}">✏️</button>
+                                <button class="review-delete-btn" data-review-id="${review.id}">🗑️</button>
+                            </div>
+                        `;
+                    }
+                    
+                    reviewContent += `
+                            </div>
+                            <p class="review-text">${review.text || 'Pas de commentaire'}</p>
+                        </div>
+                    `;
+                    reviewsHTML += reviewContent;
+                });
+                reviewsList.innerHTML = reviewsHTML;
+                
+                // Ajouter les event listeners pour les boutons
+                document.querySelectorAll('.review-delete-btn').forEach(btn => {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        const reviewId = this.getAttribute('data-review-id');
+                        if (confirm('Êtes-vous sûr de vouloir supprimer cet avis?')) {
+                            deleteReview(reviewId, place, imgSrc);
+                        }
+                    };
+                });
+                
+                document.querySelectorAll('.review-edit-btn').forEach(btn => {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        const reviewId = this.getAttribute('data-review-id');
+                        const reviewItem = reviews.find(r => r.id === reviewId);
+                        editReview(reviewItem, place, imgSrc);
+                    };
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors du chargement des reviews:', error);
+            document.getElementById('reviews-list').innerHTML = '<h3>Avis</h3><p>Erreur lors du chargement des avis</p>';
+        });
+        
+        // Section formulaire de review
+        const formSection = document.getElementById('review-form-section');
+        
+        if (token) {
+            // Vérifier si l'utilisateur est le propriétaire ou a déjà une review
+            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(fullPlace => {
+                // Charger les reviews à nouveau pour vérifier si l'utilisateur en a une
+                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(reviews => {
+                    const isOwner = fullPlace.owner && fullPlace.owner.id === userId;
+                    const userReview = reviews.find(r => r.user_id === userId);
+                    
+                    if (isOwner) {
+                        formSection.innerHTML = `
+                            <hr style="margin: 15px 0;">
+                            <div class="review-section error-section">
+                                <p class="error-message">❌ Vous ne pouvez pas laisser d'avis sur votre propre place</p>
+                            </div>
+                        `;
+                    } else if (userReview) {
+                        formSection.innerHTML = `
+                            <hr style="margin: 15px 0;">
+                            <div class="review-section">
+                                <p class="info-message">✓ Vous avez déjà laissé un avis. Modifiez ou supprimez-le ci-dessus.</p>
+                            </div>
+                        `;
+                    } else {
+                        formSection.innerHTML = `
+                            <hr style="margin: 15px 0;">
+                            <div class="review-section">
+                                <h3>Ajouter un avis</h3>
+                                <form id="review-form">
+                                    <label for="review-rating">Note (1-5)</label>
+                                    <select id="review-rating" required>
+                                        <option value="">Sélectionner une note</option>
+                                        <option value="1">1 - Mauvais</option>
+                                        <option value="2">2 - Moyen</option>
+                                        <option value="3">3 - Bon</option>
+                                        <option value="4">4 - Très bon</option>
+                                        <option value="5">5 - Excellent</option>
+                                    </select>
+                                    <label for="review-text">Votre avis</label>
+                                    <textarea id="review-text" placeholder="Partagez votre expérience..." rows="3"></textarea>
+                                    <button type="submit" class="auth-btn">Envoyer l'avis</button>
+                                </form>
+                            </div>
+                        `;
+                        
+                        setTimeout(function() {
+                            document.getElementById('review-form').onsubmit = function(e) {
+                                e.preventDefault();
+                                
+                                const rating = parseInt(document.getElementById('review-rating').value);
+                                const text = document.getElementById('review-text').value;
+                                
+                                const submitBtn = document.querySelector('#review-form button[type="submit"]');
+                                const originalBtnText = submitBtn.textContent;
+                                
+                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Envoi...';
+                                
+                                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: JSON.stringify({
+                                        rating,
+                                        text
+                                    })
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        return response.json().then(data => {
+                                            throw new Error(data.message || data.error || 'Erreur d\'envoi');
+                                        });
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    alert('Avis envoyé avec succès!');
+                                    document.getElementById('review-form').reset();
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = originalBtnText;
+                                    // Recharger la modale pour voir le nouvel avis
+                                    showPlaceDetailModal(place, imgSrc);
+                                })
+                                .catch(error => {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = originalBtnText;
+                                    alert('Erreur: ' + error.message);
+                                    console.error('Erreur d\'envoi d\'avis:', error);
+                                });
+                            };
+                        }, 50);
+                    }
+                });
+            });
+        } else {
+            formSection.innerHTML = `
+                <hr style="margin: 15px 0;">
+                <div class="review-section">
+                    <p class="login-prompt">Connectez-vous pour ajouter un avis</p>
+                </div>
+            `;
+        }
+    }
+    
+    // Fonction pour supprimer une review
+    function deleteReview(reviewId, place, imgSrc) {
+        const token = localStorage.getItem('access_token');
+        
+        fetch(`http://127.0.0.1:5000/api/v1/reviews/${reviewId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || data.error || 'Erreur de suppression');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Avis supprimé avec succès!');
+            showPlaceDetailModal(place, imgSrc);
+        })
+        .catch(error => {
+            alert('Erreur: ' + error.message);
+            console.error('Erreur de suppression:', error);
+        });
+    }
+    
+    // Fonction pour modifier une review
+    function editReview(review, place, imgSrc) {
+        const token = localStorage.getItem('access_token');
+        const formSection = document.getElementById('review-form-section');
+        
+        formSection.innerHTML = `
+            <hr style="margin: 15px 0;">
+            <div class="review-section">
+                <h3>Modifier votre avis</h3>
+                <form id="edit-review-form">
+                    <label for="edit-review-rating">Note (1-5)</label>
+                    <select id="edit-review-rating" required>
+                        <option value="1" ${review.rating === 1 ? 'selected' : ''}>1 - Mauvais</option>
+                        <option value="2" ${review.rating === 2 ? 'selected' : ''}>2 - Moyen</option>
+                        <option value="3" ${review.rating === 3 ? 'selected' : ''}>3 - Bon</option>
+                        <option value="4" ${review.rating === 4 ? 'selected' : ''}>4 - Très bon</option>
+                        <option value="5" ${review.rating === 5 ? 'selected' : ''}>5 - Excellent</option>
+                    </select>
+                    <label for="edit-review-text">Votre avis</label>
+                    <textarea id="edit-review-text" placeholder="Partagez votre expérience..." rows="3">${review.text || ''}</textarea>
+                    <button type="submit" class="auth-btn">Enregistrer les modifications</button>
+                </form>
+            </div>
+        `;
+        
+        setTimeout(function() {
+            document.getElementById('edit-review-form').onsubmit = function(e) {
+                e.preventDefault();
+                
+                const rating = parseInt(document.getElementById('edit-review-rating').value);
+                const text = document.getElementById('edit-review-text').value;
+                
+                const submitBtn = document.querySelector('#edit-review-form button[type="submit"]');
+                const originalBtnText = submitBtn.textContent;
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Enregistrement...';
+                
+                fetch(`http://127.0.0.1:5000/api/v1/reviews/${review.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        rating,
+                        text
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || data.error || 'Erreur de mise à jour');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Avis mis à jour avec succès!');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    showPlaceDetailModal(place, imgSrc);
+                })
+                .catch(error => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                    alert('Erreur: ' + error.message);
+                    console.error('Erreur de mise à jour:', error);
+                });
+            };
+        }, 50);
     }
     
     // Charger les places au démarrage
