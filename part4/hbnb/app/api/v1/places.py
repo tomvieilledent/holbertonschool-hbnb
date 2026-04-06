@@ -124,6 +124,7 @@ class PlaceList(Resource):
                 'id': u.id,
                 'title': u.title,
                 'price': _serialize_price(u.price),
+                'amenities': [_serialize_amenity(amenity) for amenity in u.amenities],
             }
             for u in places
         ], 200

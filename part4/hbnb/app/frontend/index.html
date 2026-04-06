@@ -139,6 +139,13 @@
                                     </div>
                                     <button type="submit" class="auth-btn">Créer l'utilisateur</button>
                                 </form>
+                                <hr style="margin: 20px 0;">
+                                <h3>Supprimer un utilisateur</h3>
+                                <form id="admin-delete-user-form" class="auth-form">
+                                    <label for="admin-delete-email">Email de l'utilisateur à supprimer</label>
+                                    <input type="email" id="admin-delete-email" name="email" placeholder="user@example.com" required>
+                                    <button type="submit" class="auth-btn" style="background-color: #dc3545;">Supprimer l'utilisateur</button>
+                                </form>
                             </div>
                             
                             <!-- Section Amenities -->
@@ -148,6 +155,13 @@
                                     <label for="admin-amenity-name">Nom de l'amenity</label>
                                     <input type="text" id="admin-amenity-name" name="name" placeholder="ex: WiFi, Piscine, Jardin..." required>
                                     <button type="submit" class="auth-btn">Créer l'amenity</button>
+                                </form>
+                                <hr style="margin: 20px 0;">
+                                <h3>Supprimer une amenity</h3>
+                                <form id="admin-delete-amenity-form" class="auth-form">
+                                    <label for="admin-delete-amenity-name">Nom de l'amenity à supprimer</label>
+                                    <input type="text" id="admin-delete-amenity-name" name="name" placeholder="ex: WiFi, Piscine..." required>
+                                    <button type="submit" class="auth-btn" style="background-color: #dc3545;">Supprimer l'amenity</button>
                                 </form>
                                 <hr style="margin: 20px 0;">
                                 <h3>Amenities existantes</h3>
@@ -579,6 +593,139 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
     
+    // Handler pour supprimer un utilisateur
+    const adminDeleteUserForm = document.getElementById('admin-delete-user-form');
+    if (adminDeleteUserForm) {
+        adminDeleteUserForm.onsubmit = function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('admin-delete-email').value;
+            const submitBtn = adminDeleteUserForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur avec l'email: ${email}?`)) {
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Suppression...';
+            
+            const token = localStorage.getItem('access_token');
+            
+            // D'abord, récupérer l'ID du user par email
+            fetch('http://127.0.0.1:5000/api/v1/users/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(r => r.json())
+            .then(users => {
+                const user = users.find(u => u.email === email);
+                if (!user) {
+                    throw new Error('Utilisateur non trouvé');
+                }
+                
+                // Supprimer le user
+                return fetch(`http://127.0.0.1:5000/api/v1/users/${user.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || data.error || 'Erreur de suppression');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Utilisateur supprimé avec succès!');
+                adminDeleteUserForm.reset();
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                alert('Erreur: ' + error.message);
+                console.error('Erreur de suppression:', error);
+            });
+        };
+    }
+    
+    // Handler pour supprimer une amenity
+    const adminDeleteAmenityForm = document.getElementById('admin-delete-amenity-form');
+    if (adminDeleteAmenityForm) {
+        adminDeleteAmenityForm.onsubmit = function(e) {
+            e.preventDefault();
+            
+            const amenityName = document.getElementById('admin-delete-amenity-name').value;
+            const submitBtn = adminDeleteAmenityForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
+            
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer l'amenity: ${amenityName}?`)) {
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Suppression...';
+            
+            const token = localStorage.getItem('access_token');
+            
+            // D'abord, récupérer l'ID de l'amenity par nom
+            fetch('http://127.0.0.1:5000/api/v1/amenities/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(amenities => {
+                const amenity = amenities.find(a => a.name.toLowerCase() === amenityName.toLowerCase());
+                if (!amenity) {
+                    throw new Error('Amenity non trouvée');
+                }
+                
+                // Supprimer l'amenity
+                return fetch(`http://127.0.0.1:5000/api/v1/amenities/${amenity.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || data.error || 'Erreur de suppression');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Amenity supprimée avec succès!');
+                adminDeleteAmenityForm.reset();
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                // Recharger la liste
+                loadAmenities();
+            })
+            .catch(error => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+                alert('Erreur: ' + error.message);
+                console.error('Erreur de suppression:', error);
+            });
+        };
+    }
+    
     // Fonction pour charger et afficher les amenities comme checkboxes pour les places
     function loadAmenitiesForPlace(containerId) {
         const amenitiesList = document.getElementById(containerId);
@@ -785,11 +932,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     <img src="${imgSrc}" alt="${place.title}">
                     <h3>${place.title}</h3>
                     <p>${place.price}€/nuit</p>
+                    <p class="tile-rating" style="color: #f39c12; font-weight: bold; margin-top: 5px;">
+                        <span style="font-size: 16px;">⭐</span> <span class="rating-value">5</span>/5
+                    </p>
                 `;
                 
                 // Stocker l'objet place complet pour l'utiliser au clic
                 td.placeData = place;
                 td.imgSrc = imgSrc;
+                
+                // Charger les reviews pour la note
+                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(reviews => {
+                    let avg = 5;
+                    if (reviews && reviews.length > 0) {
+                        const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+                        avg = (total / reviews.length).toFixed(1);
+                    }
+                    const ratingEl = td.querySelector('.rating-value');
+                    if (ratingEl) ratingEl.textContent = avg;
+                })
+                .catch(e => console.error('Erreur reviews:', e));
                 
                 currentRow.appendChild(td);
             });
@@ -874,6 +1041,23 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(reviews => {
                 const reviewsList = document.getElementById('reviews-list');
+                
+                // Calculer la moyenne des reviews
+                let averageRating = 5;
+                if (reviews && reviews.length > 0) {
+                    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+                    averageRating = (totalRating / reviews.length).toFixed(1);
+                }
+                
+                // Mettre à jour le header avec la note moyenne
+                const placeHeader = document.querySelector('.place-detail-header');
+                if (placeHeader) {
+                    const titleElement = placeHeader.querySelector('h2');
+                    if (titleElement && !placeHeader.querySelector('.average-rating')) {
+                        const ratingHTML = `<p class="average-rating" style="color: #f39c12; font-weight: bold; margin: 10px 0;"><span style="font-size: 20px;">⭐</span> ${averageRating}/5 (${reviews ? reviews.length : 0} avis)</p>`;
+                        titleElement.insertAdjacentHTML('afterend', ratingHTML);
+                    }
+                }
                 
                 if (!reviews || reviews.length === 0) {
                     reviewsList.innerHTML = '<h3>Avis</h3><p>Aucun avis pour le moment</p>';
@@ -1262,6 +1446,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <div class="place-meta">
                                             <span class="place-price">${place.price}€/nuit</span>
                                             <span class="place-location">📍 ${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}</span>
+                                            <span class="place-rating" style="color: #f39c12; font-weight: bold;">
+                                                <span style="font-size: 14px;">⭐</span> <span class="rating-value">5</span>/5
+                                            </span>
                                         </div>
                                         <div class="place-actions">
                                             <button class="view-place-reviews-btn" data-place-id="${place.id}">💬 Reviews</button>
@@ -1272,6 +1459,28 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             `;
                         }).join('');
+
+                        // Charger les notes moyennes pour chaque place
+                        userPlaces.forEach(place => {
+                            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+                                method: 'GET',
+                                headers: { 'Content-Type': 'application/json' }
+                            })
+                            .then(r => r.json())
+                            .then(reviews => {
+                                let avg = 5;
+                                if (reviews && reviews.length > 0) {
+                                    const total = reviews.reduce((sum, r) => sum + (r.rating || 0), 0);
+                                    avg = (total / reviews.length).toFixed(1);
+                                }
+                                const card = document.querySelector(`[data-place-id="${place.id}"]`);
+                                if (card) {
+                                    const ratingEl = card.querySelector('.rating-value');
+                                    if (ratingEl) ratingEl.textContent = avg;
+                                }
+                            })
+                            .catch(e => console.error('Erreur:', e));
+                        });
 
                         // Add view reviews handlers
                         document.querySelectorAll('.view-place-reviews-btn').forEach(btn => {

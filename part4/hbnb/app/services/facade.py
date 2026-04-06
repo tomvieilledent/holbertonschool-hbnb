@@ -59,6 +59,13 @@ class HBnBFacade:
             self.user_repository.update(user_id, data)
         return user
 
+    def delete_user(self, user_id):
+        """Delete a user by ID."""
+        user = self.get_user(user_id)
+        if not user:
+            raise ValueError("User not found")
+        self.user_repository.delete(user_id)
+
 # endregion
 
 

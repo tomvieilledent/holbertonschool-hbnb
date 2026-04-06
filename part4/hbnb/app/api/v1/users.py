@@ -137,3 +137,21 @@ class UserResource(Resource):
             'last_name': user.last_name,
             'email': user.email
         }, 200
+
+    @api.response(200, 'User deleted successfully')
+    @api.response(404, 'User not found')
+    @api.response(403, 'Unauthorized action')
+    @jwt_required()
+    def delete(self, user_id):
+        """Delete a user (admin only)"""
+        current_user_claims = get_jwt()
+        is_admin = current_user_claims.get('is_admin', False)
+
+        if not is_admin:
+            return {'message': 'Admin privileges required'}, 403
+
+        try:
+            facade.delete_user(user_id)
+            return {'message': 'User deleted successfully'}, 200
+        except ValueError as e:
+            return {'message': str(e)}, 404
