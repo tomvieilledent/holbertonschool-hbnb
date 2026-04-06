@@ -23,6 +23,7 @@
                     <div class="auth-btn-container">
                         <button id="open-auth-modal" class="auth-btn">Se connecter</button>
                         <button id="create-place-btn" class="create-place-btn" style="display:none;">Créer une place</button>
+                        <button id="admin-panel-btn" class="admin-panel-btn" style="display:none;">Admin Panel</button>
                         <button id="logout-btn" class="logout-btn" style="display:none;">Se déconnecter</button>
                         <button id="profile-btn" class="profile-btn-circle" style="display:none; margin-left: 10px;"></button>
                     </div>
@@ -108,6 +109,32 @@
                         </div>
                     </div>
                 </div>
+                <div id="admin-panel-modal" class="auth-modal-bg" style="display:none;">
+                    <div class="center-auth-card">
+                        <div class="auth-card">
+                            <h1>Panneau Admin</h1>
+                            <hr>
+                            <h3>Créer un utilisateur</h3>
+                            <form id="admin-create-user-form" class="auth-form">
+                                <label for="admin-first-name">Prénom</label>
+                                <input type="text" id="admin-first-name" name="first_name" placeholder="Jean" required>
+                                <label for="admin-last-name">Nom</label>
+                                <input type="text" id="admin-last-name" name="last_name" placeholder="Dupont" required>
+                                <label for="admin-email">Email</label>
+                                <input type="email" id="admin-email" name="email" placeholder="jean@example.com" required>
+                                <label for="admin-password">Mot de passe</label>
+                                <input type="password" id="admin-password" name="password" placeholder="••••••••" required>
+                                <div style="margin: 15px 0;">
+                                    <label for="admin-is-admin" style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" id="admin-is-admin" name="is_admin" style="margin-right: 10px; width: auto;">
+                                        <span>Cet utilisateur est administrateur</span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="auth-btn">Créer l'utilisateur</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <div id="main-content">
                     <div id="logement-detail" class="logement-detail-card" style="display:none;"></div>
                     <table id="logements-table" cellpadding="20" align="center"></table>
@@ -130,11 +157,14 @@ document.addEventListener('DOMContentLoaded', function() {
             var openBtn = document.getElementById('open-auth-modal');
             var logoutBtn = document.getElementById('logout-btn');
             var createPlaceBtn = document.getElementById('create-place-btn');
+            var adminPanelBtn = document.getElementById('admin-panel-btn');
             var authModal = document.getElementById('auth-modal');
             var createPlaceModal = document.getElementById('create-place-modal');
+            var adminPanelModal = document.getElementById('admin-panel-modal');
             var mainContent = document.getElementById('main-content');
             var loginForm = document.getElementById('login-form');
             var createPlaceForm = document.getElementById('create-place-form');
+            var adminCreateUserForm = document.getElementById('admin-create-user-form');
             var closeTimeout = null;
             var isConnected = false;
             var placeDetailModal = document.getElementById('place-detail-modal');
@@ -143,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('access_token');
             if (token) {
                 openBtn.style.display = 'none';
-                createPlaceBtn.style.display = 'inline-block';
                 logoutBtn.style.display = 'inline-block';
                 // Load user info and display profile button with initials
                 const userId = localStorage.getItem('user_id');
@@ -157,6 +186,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     const profileBtn = document.getElementById('profile-btn');
                     profileBtn.textContent = initials.toUpperCase();
                     profileBtn.style.display = 'inline-block';
+                    
+                    // Vérifier si l'utilisateur est admin
+                    if (user.is_admin) {
+                        adminPanelBtn.style.display = 'inline-block';
+                        createPlaceBtn.style.display = 'none';
+                    } else {
+                        createPlaceBtn.style.display = 'inline-block';
+                        adminPanelBtn.style.display = 'none';
+                    }
                 });
                 isConnected = true;
             }
@@ -266,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fermer la modale et mettre à jour l'interface
             closeAuthModal();
             openBtn.style.display = 'none';
-            createPlaceBtn.style.display = 'inline-block';
             logoutBtn.style.display = 'inline-block';
             
             // Load user info and display profile button with initials
@@ -280,6 +317,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const profileBtn = document.getElementById('profile-btn');
                 profileBtn.textContent = initials.toUpperCase();
                 profileBtn.style.display = 'inline-block';
+                
+                // Vérifier si l'utilisateur est admin
+                if (user.is_admin) {
+                    adminPanelBtn.style.display = 'inline-block';
+                    createPlaceBtn.style.display = 'none';
+                } else {
+                    createPlaceBtn.style.display = 'inline-block';
+                    adminPanelBtn.style.display = 'none';
+                }
             });
             
             openBtn.classList.remove('active');
@@ -310,12 +356,102 @@ document.addEventListener('DOMContentLoaded', function() {
         
         logoutBtn.style.display = 'none';
         createPlaceBtn.style.display = 'none';
+        adminPanelBtn.style.display = 'none';
         document.getElementById('profile-btn').style.display = 'none';
         openBtn.style.display = 'inline-block';
         isConnected = false;
+        
+        // Fermer les modales
+        adminPanelModal.classList.remove('visible');
+        adminPanelModal.style.display = 'none';
+        mainContent.classList.remove('blur-bg');
+        
         // Désactive le hover tant que la souris n'est pas ressortie
         openBtn.classList.add('no-hover');
         alert('Vous avez été déconnecté!');
+    };
+    
+    // Gestion du bouton Admin Panel
+    adminPanelBtn.onclick = function(e) {
+        e.preventDefault();
+        adminPanelModal.style.display = 'flex';
+        setTimeout(function() {
+            adminPanelModal.classList.add('visible');
+            document.querySelectorAll('#admin-panel-modal .auth-card')[0].classList.add('visible');
+        }, 10);
+        mainContent.classList.add('blur-bg');
+    };
+    
+    // Ferme la modale admin si clic sur le fond
+    adminPanelModal.onclick = function(e) {
+        if (e.target === this) {
+            adminPanelModal.classList.remove('visible');
+            document.querySelectorAll('#admin-panel-modal .auth-card')[0].classList.remove('visible');
+            setTimeout(function() {
+                adminPanelModal.style.display = 'none';
+                mainContent.classList.remove('blur-bg');
+            }, 350);
+        }
+    };
+    
+    // Soumission du formulaire de création d'utilisateur
+    adminCreateUserForm.onsubmit = function(e) {
+        e.preventDefault();
+        
+        const firstName = document.getElementById('admin-first-name').value;
+        const lastName = document.getElementById('admin-last-name').value;
+        const email = document.getElementById('admin-email').value;
+        const password = document.getElementById('admin-password').value;
+        const isAdmin = document.getElementById('admin-is-admin').checked;
+        
+        const submitBtn = adminCreateUserForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.textContent;
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Création...';
+        
+        const token = localStorage.getItem('access_token');
+        
+        fetch('http://127.0.0.1:5000/api/v1/users/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                password: password,
+                is_admin: isAdmin
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || data.error || 'Erreur de création');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Utilisateur créé avec succès!');
+            adminCreateUserForm.reset();
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            adminPanelModal.classList.remove('visible');
+            document.querySelectorAll('#admin-panel-modal .auth-card')[0].classList.remove('visible');
+            setTimeout(function() {
+                adminPanelModal.style.display = 'none';
+                mainContent.classList.remove('blur-bg');
+            }, 350);
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            alert('Erreur: ' + error.message);
+            console.error('Erreur de création:', error);
+        });
     };
     
     // Gestion de la modale de création de place
