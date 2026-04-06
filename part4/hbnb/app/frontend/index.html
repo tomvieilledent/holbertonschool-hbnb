@@ -24,6 +24,7 @@
                         <button id="open-auth-modal" class="auth-btn">Se connecter</button>
                         <button id="create-place-btn" class="create-place-btn" style="display:none;">Créer une place</button>
                         <button id="logout-btn" class="logout-btn" style="display:none;">Se déconnecter</button>
+                        <button id="profile-btn" class="profile-btn-circle" style="display:none; margin-left: 10px;"></button>
                     </div>
                 </td>
             </tr>
@@ -36,7 +37,6 @@
                 <div id="auth-modal" class="auth-modal-bg" style="display:none;">
                     <div class="center-auth-card">
                         <div class="auth-card">
-                            <button class="close-modal-btn" id="close-auth-modal" aria-label="Fermer">&times;</button>
                             <div class="auth-logo">
                                 <img src="images/logo.png" alt="Logo HBNB">
                             </div>
@@ -57,7 +57,6 @@
                 <div id="create-place-modal" class="auth-modal-bg" style="display:none;">
                     <div class="center-auth-card">
                         <div class="auth-card">
-                            <button class="close-modal-btn" id="close-place-modal" aria-label="Fermer">&times;</button>
                             <div class="auth-logo">
                                 <img src="images/logo.png" alt="Logo HBNB">
                             </div>
@@ -84,8 +83,28 @@
                 <div id="place-detail-modal" class="auth-modal-bg" style="display:none;">
                     <div class="center-auth-card">
                         <div class="auth-card" id="place-detail-card">
-                            <button class="close-modal-btn" id="close-place-detail-modal" aria-label="Fermer">&times;</button>
                             <div id="place-detail-content"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="profile-modal" class="auth-modal-bg" style="display:none;">
+                    <div class="center-auth-card" style="max-width: 1000px; width: 95%;">
+                        <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
+                            <h1>Mon Profil</h1>
+                            <hr>
+                            <h3>Informations Personnelles</h3>
+                            <form id="profile-edit-form" class="auth-form">
+                                <label for="profile-first-name">Prénom</label>
+                                <input type="text" id="profile-first-name" name="first_name" required>
+                                <label for="profile-last-name">Nom</label>
+                                <input type="text" id="profile-last-name" name="last_name" required>
+                                <label for="profile-email">Email</label>
+                                <input type="email" id="profile-email" name="email" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                                <button type="submit" class="auth-btn">Mettre à jour</button>
+                            </form>
+                            <hr>
+                            <h3>Mes Places</h3>
+                            <div id="my-places-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;"></div>
                         </div>
                     </div>
                 </div>
@@ -114,14 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
             var authModal = document.getElementById('auth-modal');
             var createPlaceModal = document.getElementById('create-place-modal');
             var mainContent = document.getElementById('main-content');
-            var closeBtn = document.getElementById('close-auth-modal');
-            var closePlaceBtn = document.getElementById('close-place-modal');
             var loginForm = document.querySelector('.auth-form');
             var createPlaceForm = document.getElementById('create-place-form');
             var closeTimeout = null;
             var isConnected = false;
             var placeDetailModal = document.getElementById('place-detail-modal');
-            var closePlaceDetailBtn = document.getElementById('close-place-detail-modal');
             
             // Vérifier si l'utilisateur est déjà connecté
             const token = localStorage.getItem('access_token');
@@ -129,6 +145,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 openBtn.style.display = 'none';
                 createPlaceBtn.style.display = 'inline-block';
                 logoutBtn.style.display = 'inline-block';
+                // Load user info and display profile button with initials
+                const userId = localStorage.getItem('user_id');
+                fetch(`http://127.0.0.1:5000/api/v1/users/${userId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(user => {
+                    const initials = (user.first_name?.charAt(0) || '') + (user.last_name?.charAt(0) || '');
+                    const profileBtn = document.getElementById('profile-btn');
+                    profileBtn.textContent = initials.toUpperCase();
+                    profileBtn.style.display = 'inline-block';
+                });
                 isConnected = true;
             }
             
@@ -190,11 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
             openBtn.classList.remove('active');
         }
     }
-    // Ferme la modale avec la croix
-    closeBtn.onclick = function(e) {
-        e.preventDefault();
-        closeAuthModal();
-    };
     // Ferme la modale si clic sur le fond
     authModal.onclick = function(e) {
         // Empêche la fermeture si le focus est sur un input du formulaire
@@ -244,6 +268,20 @@ document.addEventListener('DOMContentLoaded', function() {
             openBtn.style.display = 'none';
             createPlaceBtn.style.display = 'inline-block';
             logoutBtn.style.display = 'inline-block';
+            
+            // Load user info and display profile button with initials
+            fetch(`http://127.0.0.1:5000/api/v1/users/${data.user_id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(user => {
+                const initials = (user.first_name?.charAt(0) || '') + (user.last_name?.charAt(0) || '');
+                const profileBtn = document.getElementById('profile-btn');
+                profileBtn.textContent = initials.toUpperCase();
+                profileBtn.style.display = 'inline-block';
+            });
+            
             openBtn.classList.remove('active');
             isConnected = true;
             
@@ -272,6 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         logoutBtn.style.display = 'none';
         createPlaceBtn.style.display = 'none';
+        document.getElementById('profile-btn').style.display = 'none';
         openBtn.style.display = 'inline-block';
         isConnected = false;
         // Désactive le hover tant que la souris n'est pas ressortie
@@ -288,17 +327,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#create-place-modal .auth-card')[0].classList.add('visible');
         }, 10);
         mainContent.classList.add('blur-bg');
-    };
-    
-    // Ferme la modale de création avec la croix
-    closePlaceBtn.onclick = function(e) {
-        e.preventDefault();
-        createPlaceModal.classList.remove('visible');
-        document.querySelectorAll('#create-place-modal .auth-card')[0].classList.remove('visible');
-        setTimeout(function() {
-            createPlaceModal.style.display = 'none';
-        }, 350);
-        mainContent.classList.remove('blur-bg');
     };
     
     // Ferme la modale de création si clic sur le fond
@@ -446,21 +474,16 @@ document.addEventListener('DOMContentLoaded', function() {
             logementsTable.innerHTML = '<tr><td colspan="5" align="center"><p>Erreur lors du chargement des places</p></td></tr>';
         });
     }
-        // Ferme la modale de détail avec la croix
-    closePlaceDetailBtn.onclick = function(e) {
-        e.preventDefault();
-        placeDetailModal.classList.remove('visible');
-        document.getElementById('place-detail-card').classList.remove('visible');
-        setTimeout(function() {
-            placeDetailModal.style.display = 'none';
-        }, 350);
-        mainContent.classList.remove('blur-bg');
-    };
     
     // Ferme la modale de détail si clic sur le fond
     placeDetailModal.onclick = function(e) {
         if (e.target === this) {
-            closePlaceDetailBtn.click();
+            placeDetailModal.classList.remove('visible');
+            document.getElementById('place-detail-card').classList.remove('visible');
+            setTimeout(function() {
+                placeDetailModal.style.display = 'none';
+            }, 350);
+            mainContent.classList.remove('blur-bg');
         }
     };
     
@@ -794,6 +817,339 @@ document.addEventListener('DOMContentLoaded', function() {
             // Retire la classe no-hover au mouseleave
     openBtn.addEventListener('mouseleave', function() {
         openBtn.classList.remove('no-hover');
+    });
+
+    // Profile Button Handler
+    const profileBtn = document.getElementById('profile-btn');
+    const profileModal = document.getElementById('profile-modal');
+
+    profileBtn.addEventListener('click', function() {
+        loadUserProfile();
+        profileModal.style.display = 'flex';
+        setTimeout(function() {
+            profileModal.classList.add('visible');
+            profileModal.querySelector('.auth-card').classList.add('visible');
+        }, 10);
+        mainContent.classList.add('blur-bg');
+    });
+
+    // Close profile modal when clicking on background
+    profileModal.addEventListener('click', function(e) {
+        if (e.target === profileModal) {
+            profileModal.classList.remove('visible');
+            profileModal.querySelector('.auth-card').classList.remove('visible');
+            setTimeout(function() {
+                profileModal.style.display = 'none';
+                mainContent.classList.remove('blur-bg');
+            }, 300);
+        }
+    });
+
+    // Load User Profile
+    function loadUserProfile() {
+        const userEmail = localStorage.getItem('user_email');
+        const userId = localStorage.getItem('user_id');
+
+        // Load user info
+        fetch(`http://127.0.0.1:5000/api/v1/users/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(user => {
+            document.getElementById('profile-first-name').value = user.first_name || '';
+            document.getElementById('profile-last-name').value = user.last_name || '';
+            document.getElementById('profile-email').value = user.email || '';
+        })
+        .catch(error => console.error('Erreur:', error));
+
+        // Load user places
+        loadMyPlaces();
+    }
+
+    // Load User Places
+    function loadMyPlaces() {
+        const userId = localStorage.getItem('user_id');
+        
+        fetch('http://127.0.0.1:5000/api/v1/places/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(places => {
+            const myPlacesGrid = document.getElementById('my-places-grid');
+            
+            // Fetch full place details to get owner info
+            const placePromises = places.map(place => 
+                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(r => r.json())
+            );
+
+            Promise.all(placePromises)
+                .then(fullPlaces => {
+                    const userPlaces = fullPlaces.filter(p => p.owner && p.owner.id === userId);
+                    
+                    if (userPlaces.length === 0) {
+                        myPlacesGrid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1 / -1;">Vous n\'avez pas encore créé de place</p>';
+                    } else {
+                        myPlacesGrid.innerHTML = userPlaces.map((place, index) => {
+                            const images = ['logement1.jpg', 'logement2.jpg', 'logement3.jpg', 'logement4.jpg', 'logement5.jpg', 'logement6.jpg', 'logement7.jpg', 'logement8.jpg', 'logement9.jpg', 'logement10.jpg'];
+                            const imgSrc = `images/${images[index % images.length]}`;
+                            
+                            return `
+                                <div class="my-place-card" data-place-id="${place.id}" style="cursor: pointer;">
+                                    <div class="place-image-container">
+                                        <img src="${imgSrc}" alt="${place.title}" class="place-image">
+                                    </div>
+                                    <div class="place-info">
+                                        <h4>${place.title}</h4>
+                                        <p class="place-description">${place.description || 'N/A'}</p>
+                                        <div class="place-meta">
+                                            <span class="place-price">${place.price}€/nuit</span>
+                                            <span class="place-location">📍 ${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}</span>
+                                        </div>
+                                        <div class="place-actions">
+                                            <button class="view-place-reviews-btn" data-place-id="${place.id}">💬 Reviews</button>
+                                            <button class="edit-place-btn" data-place-id="${place.id}">✏️ Modifier</button>
+                                            <button class="delete-place-btn" data-place-id="${place.id}">🗑️ Supprimer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        // Add view details handlers
+                        document.querySelectorAll('.view-place-reviews-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const placeId = this.getAttribute('data-place-id');
+                                showPlaceEditModal(placeId);
+                            });
+                        });
+
+                        // Add edit handlers
+                        document.querySelectorAll('.edit-place-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const placeId = this.getAttribute('data-place-id');
+                                showPlaceEditModal(placeId);
+                            });
+                        });
+
+                        // Add delete handlers
+                        document.querySelectorAll('.delete-place-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const placeId = this.getAttribute('data-place-id');
+                                if (confirm('Êtes-vous sûr de vouloir supprimer cette place ?')) {
+                                    deletePlace(placeId);
+                                }
+                            });
+                        });
+
+                        // Add card click handler
+                        document.querySelectorAll('.my-place-card').forEach(card => {
+                            card.addEventListener('click', function() {
+                                const placeId = this.getAttribute('data-place-id');
+                                showPlaceEditModal(placeId);
+                            });
+                        });
+                    }
+                });
+        })
+        .catch(error => console.error('Erreur:', error));
+    }
+
+    // Show Place Edit Modal
+    function showPlaceEditModal(placeId) {
+        const token = localStorage.getItem('access_token');
+        
+        fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(r => r.json())
+        .then(place => {
+            // Create edit modal container
+            const editModalHTML = `
+                <div id="place-edit-modal" class="auth-modal-bg" style="display: flex;">
+                    <div class="center-auth-card" style="max-width: 1000px; width: 95%;">
+                        <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
+                            <h1>${place.title}</h1>
+                            <hr>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div>
+                                    <h3>Modifier la place</h3>
+                                    <form id="edit-place-form" class="auth-form">
+                                        <label for="edit-place-title">Titre</label>
+                                        <input type="text" id="edit-place-title" name="title" value="${place.title}" required>
+                                        <label for="edit-place-description">Description</label>
+                                        <textarea id="edit-place-description" name="description" rows="3">${place.description || ''}</textarea>
+                                        <label for="edit-place-price">Prix/nuit (€)</label>
+                                        <input type="number" id="edit-place-price" name="price" value="${place.price}" step="0.01" required>
+                                        <label for="edit-place-latitude">Latitude</label>
+                                        <input type="number" id="edit-place-latitude" name="latitude" value="${place.latitude}" step="0.0001" required>
+                                        <label for="edit-place-longitude">Longitude</label>
+                                        <input type="number" id="edit-place-longitude" name="longitude" value="${place.longitude}" step="0.0001" required>
+                                        <button type="submit" class="auth-btn">Enregistrer les modifications</button>
+                                    </form>
+                                </div>
+                                <div>
+                                    <h3>Avis (${place.reviews ? place.reviews.length : 0})</h3>
+                                    <div id="edit-reviews-list" style="max-height: 500px; overflow-y: auto;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Insert the modal into the DOM
+            const existingModal = document.getElementById('place-edit-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            document.body.insertAdjacentHTML('beforeend', editModalHTML);
+            mainContent.classList.add('blur-bg');
+
+            // Populate reviews
+            const reviewsList = document.getElementById('edit-reviews-list');
+            if (!place.reviews || place.reviews.length === 0) {
+                reviewsList.innerHTML = '<p style="color: #666;">Aucun avis</p>';
+            } else {
+                reviewsList.innerHTML = place.reviews.map(review => `
+                    <div class="review-item" style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="review-rating">⭐ ${review.rating}/5</span>
+                            <span class="review-user" style="font-size: 0.9rem;">${review.user?.first_name || 'Anonyme'}</span>
+                        </div>
+                        <p style="margin: 8px 0; color: #666; font-size: 0.9rem;">${review.text || ''}</p>
+                    </div>
+                `).join('');
+            }
+
+            // Handle form submission
+            document.getElementById('edit-place-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = {
+                    title: document.getElementById('edit-place-title').value,
+                    description: document.getElementById('edit-place-description').value,
+                    price: parseFloat(document.getElementById('edit-place-price').value),
+                    latitude: parseFloat(document.getElementById('edit-place-latitude').value),
+                    longitude: parseFloat(document.getElementById('edit-place-longitude').value)
+                };
+
+                fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Place mise à jour avec succès');
+                        document.getElementById('place-edit-modal').remove();
+                        mainContent.classList.remove('blur-bg');
+                        loadMyPlaces();
+                    } else {
+                        return response.json().then(data => {
+                            alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                        });
+                    }
+                })
+                .catch(error => {
+                    alert('Erreur: ' + error.message);
+                    console.error('Erreur:', error);
+                });
+            });
+
+            // Handle close by clicking on background
+            setTimeout(function() {
+                const editModal = document.getElementById('place-edit-modal');
+                if (editModal) {
+                    editModal.addEventListener('click', function(e) {
+                        if (e.target === editModal) {
+                            editModal.remove();
+                            mainContent.classList.remove('blur-bg');
+                        }
+                    });
+                }
+            }, 50);
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors du chargement de la place');
+        });
+    }
+
+    // Delete Place
+    function deletePlace(placeId) {
+        const token = localStorage.getItem('access_token');
+        
+        fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                loadMyPlaces();
+            } else {
+                alert('Erreur lors de la suppression');
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur: ' + error.message);
+        });
+    }
+
+    // Profile Update Form Handler
+    const profileEditForm = document.getElementById('profile-edit-form');
+    profileEditForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const userId = localStorage.getItem('user_id');
+        const token = localStorage.getItem('access_token');
+        const firstName = document.getElementById('profile-first-name').value;
+        const lastName = document.getElementById('profile-last-name').value;
+
+        fetch(`http://127.0.0.1:5000/api/v1/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName
+            })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Profil mis à jour avec succès');
+                loadUserProfile();
+            } else {
+                return response.json().then(data => {
+                    alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur: ' + error.message);
+        });
     });
 });
 </script>
