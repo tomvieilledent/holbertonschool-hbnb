@@ -21,6 +21,7 @@ class HBnBFacade:
 
 # region Users
 
+
     def create_user(self, user_data):
         """Create and store a new user."""
         user = User(**user_data)
@@ -71,8 +72,15 @@ class HBnBFacade:
 
 # region Amenities
 
+
     def create_amenity(self, amenity_data):
         """Create and store a new amenity."""
+        # Check if an amenity with this name already exists
+        existing_amenities = self.amenity_repository.get_all()
+        name = amenity_data.get('name', '').strip().lower()
+        for existing in existing_amenities:
+            if existing.name.lower() == name:
+                raise ValueError("An amenity with this name already exists")
         amenity = Amenity(**amenity_data)
         self.amenity_repository.add(amenity)
         return amenity
@@ -90,6 +98,14 @@ class HBnBFacade:
         amenity = self.get_amenity(amenity_id)
         if not amenity:
             raise ValueError("Amenity not found")
+        # Check if the new name already exists (excluding the current amenity)
+        if 'name' in amenity_data:
+            existing_amenities = self.amenity_repository.get_all()
+            new_name = amenity_data['name'].strip().lower()
+            for existing in existing_amenities:
+                if existing.id != amenity_id and existing.name.lower() == new_name:
+                    raise ValueError(
+                        "An amenity with this name already exists")
         self.amenity_repository.update(amenity_id, amenity_data)
         return amenity
 
@@ -104,6 +120,7 @@ class HBnBFacade:
 
 
 # region Places
+
 
     def create_place(self, place_data):
         """Create and store a new place."""
@@ -183,6 +200,7 @@ class HBnBFacade:
 
 
 # region Reviews
+
 
     def create_review(self, review_data):
         """Create and store a new review."""
