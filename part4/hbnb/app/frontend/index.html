@@ -187,6 +187,140 @@
 
 
 <script>
+    // Fonction de notification discrète (remplace alert)
+    function showNotification(message, type = 'info', duration = 3000) {
+        let container = document.getElementById('notification-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; font-family: Arial, sans-serif;';
+            document.body.appendChild(container);
+        }
+
+        const notification = document.createElement('div');
+        const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
+        notification.style.cssText = `
+            background-color: ${bgColor};
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        `;
+        notification.textContent = message;
+        
+        container.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-out forwards';
+            setTimeout(() => notification.remove(), 300);
+        }, duration);
+    }
+    
+    // Ajouter les animations CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Fonction de confirmation modale (remplace confirm)
+    function showConfirmation(message, callback) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        `;
+        
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            max-width: 400px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        `;
+        
+        const text = document.createElement('p');
+        text.textContent = message;
+        text.style.marginBottom = '20px';
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+        
+        const yesBtn = document.createElement('button');
+        yesBtn.textContent = 'Oui';
+        yesBtn.style.cssText = `
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        `;
+        
+        const noBtn = document.createElement('button');
+        noBtn.textContent = 'Non';
+        noBtn.style.cssText = `
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        `;
+        
+        yesBtn.onclick = () => {
+            modal.remove();
+            callback(true);
+        };
+        
+        noBtn.onclick = () => {
+            modal.remove();
+            callback(false);
+        };
+        
+        btnContainer.appendChild(yesBtn);
+        btnContainer.appendChild(noBtn);
+        dialog.appendChild(text);
+        dialog.appendChild(btnContainer);
+        modal.appendChild(dialog);
+        document.body.appendChild(modal);
+    }
+
 document.addEventListener('DOMContentLoaded', function() {
             // Déclarer les variables au début
             var openBtn = document.getElementById('open-auth-modal');
@@ -372,12 +506,12 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.textContent = originalBtnText;
             
             // Message de succès (optionnel)
-            alert('Connexion réussie!');
+            showNotification('Connexion réussie!', 'success');
         })
         .catch(error => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
             console.error('Erreur de connexion:', error);
         });
     };
@@ -403,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Désactive le hover tant que la souris n'est pas ressortie
         openBtn.classList.add('no-hover');
-        alert('Vous avez été déconnecté!');
+        showNotification('Vous avez été déconnecté!', 'info');
     };
     
     // Gestion du bouton Admin Panel
@@ -470,7 +604,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            alert('Utilisateur créé avec succès!');
+            showNotification('Utilisateur créé avec succès!', 'success');
             adminCreateUserForm.reset();
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
@@ -484,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
             console.error('Erreur de création:', error);
         });
     };
@@ -578,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            alert('Amenity créée avec succès!');
+            showNotification('Amenity créée avec succès!', 'success');
             adminCreateAmenityForm.reset();
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
@@ -588,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
             console.error('Erreur de création:', error);
         });
     };
@@ -645,7 +779,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                alert('Utilisateur supprimé avec succès!');
+                showNotification('Utilisateur supprimé avec succès!', 'success');
                 adminDeleteUserForm.reset();
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
@@ -653,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
-                alert('Erreur: ' + error.message);
+                showNotification('Erreur: ' + error.message, 'error');
                 console.error('Erreur de suppression:', error);
             });
         };
@@ -710,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response.json();
             })
             .then(data => {
-                alert('Amenity supprimée avec succès!');
+                showNotification('Amenity supprimée avec succès!', 'success');
                 adminDeleteAmenityForm.reset();
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
@@ -720,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalBtnText;
-                alert('Erreur: ' + error.message);
+                showNotification('Erreur: ' + error.message, 'error');
                 console.error('Erreur de suppression:', error);
             });
         };
@@ -874,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            alert('Place créée avec succès!');
+            showNotification('Place créée avec succès!', 'success');
             createPlaceForm.reset();
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
@@ -884,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
             console.error('Erreur de création:', error);
         });
     };
@@ -1214,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     return response.json();
                                 })
                                 .then(data => {
-                                    alert('Avis envoyé avec succès!');
+                                    showNotification('Avis envoyé avec succès!', 'success');
                                     document.getElementById('review-form').reset();
                                     submitBtn.disabled = false;
                                     submitBtn.textContent = originalBtnText;
@@ -1224,7 +1358,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 .catch(error => {
                                     submitBtn.disabled = false;
                                     submitBtn.textContent = originalBtnText;
-                                    alert('Erreur: ' + error.message);
+                                    showNotification('Erreur: ' + error.message, 'error');
                                     console.error('Erreur d\'envoi d\'avis:', error);
                                 });
                             };
@@ -1261,11 +1395,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            alert('Avis supprimé avec succès!');
+            showNotification('Avis supprimé avec succès!', 'success');
             showPlaceDetailModal(place, imgSrc);
         })
         .catch(error => {
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
             console.error('Erreur de suppression:', error);
         });
     }
@@ -1328,7 +1462,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    alert('Avis mis à jour avec succès!');
+                    showNotification('Avis mis à jour avec succès!', 'success');
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalBtnText;
                     showPlaceDetailModal(place, imgSrc);
@@ -1336,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalBtnText;
-                    alert('Erreur: ' + error.message);
+                    showNotification('Erreur: ' + error.message, 'error');
                     console.error('Erreur de mise à jour:', error);
                 });
             };
@@ -1605,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Erreur:', error);
-            alert('Erreur lors du chargement des reviews');
+            showNotification('Erreur lors du chargement des avis', 'error');
         });
     }
 
@@ -1691,7 +1825,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         })
                         .then(response => {
                             if (response.ok) {
-                                alert('Place mise à jour avec succès');
+                                showNotification('Place mise à jour avec succès', 'success');
                                 const editModal = document.getElementById('place-edit-modal');
                                 if (editModal) {
                                     editModal.classList.remove('visible');
@@ -1704,12 +1838,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 }
                             } else {
                                 return response.json().then(data => {
-                                    alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                                    showNotification('Erreur: ' + (data.message || 'Impossible de mettre à jour'), 'error');
                                 });
                             }
                         })
                         .catch(error => {
-                            alert('Erreur: ' + error.message);
+                            showNotification('Erreur: ' + error.message, 'error');
                             console.error('Erreur:', error);
                         });
                     });
@@ -1735,7 +1869,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Erreur:', error);
-            alert('Erreur lors du chargement de la place');
+            showNotification('Erreur lors du chargement de la place', 'error');
         });
     }
 
@@ -1754,12 +1888,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.ok) {
                 loadMyPlaces();
             } else {
-                alert('Erreur lors de la suppression');
+                showNotification('Erreur lors de la suppression', 'error');
             }
         })
         .catch(error => {
             console.error('Erreur:', error);
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
         });
     }
 
@@ -1786,17 +1920,17 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.ok) {
-                alert('Profil mis à jour avec succès');
+                showNotification('Profil mis à jour avec succès', 'success');
                 loadUserProfile();
             } else {
                 return response.json().then(data => {
-                    alert('Erreur: ' + (data.message || 'Impossible de mettre à jour'));
+                    showNotification('Erreur: ' + (data.message || 'Impossible de mettre à jour'), 'error');
                 });
             }
         })
         .catch(error => {
             console.error('Erreur:', error);
-            alert('Erreur: ' + error.message);
+            showNotification('Erreur: ' + error.message, 'error');
         });
     });
 });
