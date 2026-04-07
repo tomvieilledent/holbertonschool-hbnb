@@ -357,7 +357,7 @@ main td p {
   padding: 12px 10px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
   text-align: center;
   position: relative;
   display: flex;
@@ -877,4 +877,52 @@ footer div {
   display: flex;
   gap: 8px;
   margin-top: 12px;
+}
+
+input[type='checkbox'] {
+  transition: none !important;
+  transform: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  position: relative !important;
+  top: 0 !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+input[type='checkbox']:hover,
+input[type='checkbox']:focus,
+input[type='checkbox']:active {
+  transform: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  position: relative !important;
+  top: 0 !important;
+}
+
+table label {
+  transition: none !important;
+  transform: none !important;
+  position: relative !important;
+  top: 0 !important;
+}
+
+table label:hover,
+table label:focus,
+table label:active {
+  transform: none !important;
+  outline: none !important;
+  position: relative !important;
+  top: 0 !important;
+}
+
+td {
+  transition: none !important;
+  transform: none !important;
+}
+
+tr {
+  transition: none !important;
+  transform: none !important;
 }

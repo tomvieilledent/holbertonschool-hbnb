@@ -75,7 +75,7 @@
                                 <label for="place-longitude">Longitude</label>
                                 <input type="number" id="place-longitude" name="longitude" placeholder="2.3522" step="0.0001" required>
                                 <label>Commodités (optionnel)</label>
-                                <div id="place-amenities-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;"></div>
+                                <div id="place-amenities-list" style="margin-bottom: 15px;"></div>
                                 <button type="submit" class="auth-btn">Créer</button>
                             </form>
                         </div>
@@ -865,7 +865,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour charger et afficher les amenities comme checkboxes pour les places
     function loadAmenitiesForPlace(containerId) {
         const amenitiesList = document.getElementById(containerId);
-        amenitiesList.innerHTML = '<p style="grid-column: 1/-1;">Chargement...</p>';
+        amenitiesList.innerHTML = '<p>Chargement...</p>';
         
         fetch('http://127.0.0.1:5000/api/v1/amenities/', {
             method: 'GET',
@@ -874,18 +874,30 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(amenities => {
             if (!amenities || amenities.length === 0) {
-                amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Aucune amenity disponible</p>';
+                amenitiesList.innerHTML = '<p style="color: #999;">Aucune amenity disponible</p>';
             } else {
-                amenitiesList.innerHTML = amenities.map(amenity => `
-                    <div style="display: flex; align-items: center;">
-                        <input type="checkbox" id="amenity-${amenity.id}" name="place-amenity" value="${amenity.id}" style="margin-right: 8px; width: auto;">
-                        <label for="amenity-${amenity.id}" style="margin: 0; cursor: pointer;">${amenity.name}</label>
-                    </div>
-                `).join('');
+                let html = '<table style="width: 100%; border-collapse: separate; border-spacing: 15px;"><tbody>';
+                for (let i = 0; i < amenities.length; i += 4) {
+                    html += '<tr>';
+                    // Boucle pour 4 colonnes
+                    for (let j = 0; j < 4; j++) {
+                        if (amenities[i + j]) {
+                            html += `<td style="padding: 12px; border: none; width: 25%; height: 40px;">
+                                <label style="display: flex; align-items: center; margin: 0; cursor: pointer; height: 100%;">
+                                    <span style="flex: 1;">${amenities[i + j].name}</span>
+                                    <input type="checkbox" id="amenity-${amenities[i + j].id}" name="place-amenity" value="${amenities[i + j].id}" style="width: auto; margin-left: 10px;">
+                                </label>
+                            </td>`;
+                        }
+                    }
+                    html += '</tr>';
+                }
+                html += '</tbody></table>';
+                amenitiesList.innerHTML = html;
             }
         })
         .catch(error => {
-            amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: red;">Erreur lors du chargement des amenities</p>';
+            amenitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des amenities</p>';
             console.error('Erreur:', error);
         });
     }
@@ -893,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fonction pour charger et afficher les amenities en presélectionnant ceux de la place
     function loadAmenitiesForEditPlace(containerId, placeAmenities) {
         const amenitiesList = document.getElementById(containerId);
-        amenitiesList.innerHTML = '<p style="grid-column: 1/-1;">Chargement...</p>';
+        amenitiesList.innerHTML = '<p>Chargement...</p>';
         
         fetch('http://127.0.0.1:5000/api/v1/amenities/', {
             method: 'GET',
@@ -902,21 +914,33 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(amenities => {
             if (!amenities || amenities.length === 0) {
-                amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: #999;">Aucune amenity disponible</p>';
+                amenitiesList.innerHTML = '<p style="color: #999;">Aucune amenity disponible</p>';
             } else {
                 // Créer un Set des IDs du place pour comparaison rapide
                 const placeAmenityIds = new Set((placeAmenities || []).map(a => a.id || a));
                 
-                amenitiesList.innerHTML = amenities.map(amenity => `
-                    <div style="display: flex; align-items: center;">
-                        <input type="checkbox" id="edit-amenity-${amenity.id}" name="place-amenity" value="${amenity.id}" ${placeAmenityIds.has(amenity.id) ? 'checked' : ''} style="margin-right: 8px; width: auto;">
-                        <label for="edit-amenity-${amenity.id}" style="margin: 0; cursor: pointer;">${amenity.name}</label>
-                    </div>
-                `).join('');
+                let html = '<table style="width: 100%; border-collapse: separate; border-spacing: 15px;"><tbody>';
+                for (let i = 0; i < amenities.length; i += 4) {
+                    html += '<tr>';
+                    // Boucle pour 4 colonnes
+                    for (let j = 0; j < 4; j++) {
+                        if (amenities[i + j]) {
+                            html += `<td style="padding: 12px; border: none; width: 25%; height: 40px;">
+                                <label style="display: flex; align-items: center; margin: 0; cursor: pointer; height: 100%;">
+                                    <span style="flex: 1;">${amenities[i + j].name}</span>
+                                    <input type="checkbox" id="edit-amenity-${amenities[i + j].id}" name="place-amenity" value="${amenities[i + j].id}" ${placeAmenityIds.has(amenities[i + j].id) ? 'checked' : ''} style="width: auto; margin-left: 10px;">
+                                </label>
+                            </td>`;
+                        }
+                    }
+                    html += '</tr>';
+                }
+                html += '</tbody></table>';
+                amenitiesList.innerHTML = html;
             }
         })
         .catch(error => {
-            amenitiesList.innerHTML = '<p style="grid-column: 1/-1; color: red;">Erreur lors du chargement des amenities</p>';
+            amenitiesList.innerHTML = '<p style="color: red;">Erreur lors du chargement des amenities</p>';
             console.error('Erreur:', error);
         });
     }
@@ -1598,7 +1622,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const reviewsModalHTML = `
                 <div id="place-reviews-modal" class="auth-modal-bg" style="display: none;">
                     <div class="center-auth-card">
-                        <div class="auth-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div class="auth-card" style="width: 350px !important; max-height: 90vh; overflow-y: auto;">
                             <h1>${place.title}</h1>
                             <hr>
                             <h3>Avis (${place.reviews ? place.reviews.length : 0})</h3>
@@ -1636,7 +1660,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         reviewsList.innerHTML = '<p style="color: #666;">Aucun avis</p>';
                     } else {
                         reviewsList.innerHTML = place.reviews.map(review => `
-                            <div class="review-item" style="margin-bottom: 12px;">
+                            <div class="review-item" style="width: 300px; margin-bottom: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <span class="review-rating">⭐ ${review.rating}/5</span>
                                     <span class="review-user" style="font-size: 0.9rem;">${review.user?.first_name || 'Anonyme'}</span>
@@ -1701,7 +1725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <label for="edit-place-longitude">Longitude</label>
                                 <input type="number" id="edit-place-longitude" name="longitude" value="${place.longitude}" step="0.0001" required>
                                 <label>Commodités (optionnel)</label>
-                                <div id="edit-place-amenities-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;"></div>
+                                <div id="edit-place-amenities-list" style="margin-bottom: 15px;"></div>
                                 <button type="submit" class="auth-btn">Enregistrer les modifications</button>
                             </form>
                         </div>
