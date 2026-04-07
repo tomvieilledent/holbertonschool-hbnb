@@ -57,7 +57,7 @@
                 </div>
                 <div id="create-place-modal" class="auth-modal-bg" style="display:none;">
                     <div class="center-auth-card">
-                        <div class="auth-card">
+                        <div class="auth-card" style="width: 500px !important;">
                             <div class="auth-logo">
                                 <img src="images/logo.png" alt="Logo HBNB">
                             </div>
@@ -82,14 +82,14 @@
                     </div>
                 </div>
                 <div id="place-detail-modal" class="auth-modal-bg" style="display:none;">
-                    <div class="center-auth-card">
+                    <div class="center-auth-card" style="width: 500px !important;">
                         <div class="auth-card" id="place-detail-card">
                             <div id="place-detail-content"></div>
                         </div>
                     </div>
                 </div>
                 <div id="profile-modal" class="auth-modal-bg" style="display:none;">
-                    <div class="center-auth-card" style="max-width: 1000px; width: 95%;">
+                    <div class="center-auth-card" style="width: 500px !important;">
                         <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
                             <h1>Mon Profil</h1>
                             <hr>
@@ -110,13 +110,13 @@
                     </div>
                 </div>
                 <div id="admin-panel-modal" class="auth-modal-bg" style="display:none;">
-                    <div class="center-auth-card" style="max-width: 600px;">
+                    <div class="center-auth-card" style="width: 500px !important;">
                         <div class="auth-card" style="max-width: 100%; max-height: 90vh; overflow-y: auto;">
                             <h1>Panneau Admin</h1>
                             <hr>
                             <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                                <button id="admin-tab-users" class="admin-tab-btn active" style="flex: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">👤 Utilisateurs</button>
-                                <button id="admin-tab-amenities" class="admin-tab-btn" style="flex: 1; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔧 Amenities</button>
+                                <button id="admin-tab-users" class="admin-tab-btn active" style="flex: 1; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Utilisateurs</button>
+                                <button id="admin-tab-amenities" class="admin-tab-btn" style="flex: 1; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Amenities</button>
                             </div>
                             
                             <!-- Section Utilisateurs -->
@@ -1146,6 +1146,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(r => r.json())
         .then(fullPlace => {
             // Afficher les détails complets
+            const amenitiesHTML = fullPlace.amenities && fullPlace.amenities.length > 0 
+                ? `<div style="margin: 15px 0;"><h4>Commodités</h4><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">${fullPlace.amenities.map(a => `<span style="background-color: #e8f4f8; padding: 8px; border-radius: 4px; font-size: 14px;">• ${a.name}</span>`).join('')}</div></div><hr style="margin: 15px 0;">`
+                : '';
+            
             placeDetailContent.innerHTML = `
                 <div class="place-detail-header">
                     <img src="${imgSrc}" alt="${fullPlace.title}" style="width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
@@ -1156,6 +1160,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 
                 <hr style="margin: 15px 0;">
+                
+                ${amenitiesHTML}
                 
                 <div id="reviews-list" class="reviews-section">
                     <h3>Avis</h3>
@@ -1283,14 +1289,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         formSection.innerHTML = `
                             <hr style="margin: 15px 0;">
                             <div class="review-section error-section">
-                                <p class="error-message">❌ Vous ne pouvez pas laisser d'avis sur votre propre place</p>
+                                <p class="error-message">Vous ne pouvez pas laisser d'avis sur votre propre place</p>
                             </div>
                         `;
                     } else if (userReview) {
                         formSection.innerHTML = `
                             <hr style="margin: 15px 0;">
                             <div class="review-section">
-                                <p class="info-message">✓ Vous avez déjà laissé un avis. Modifiez ou supprimez-le ci-dessus.</p>
+                                <p class="info-message">Vous avez déjà laissé un avis. Modifiez ou supprimez-le ci-dessus.</p>
                             </div>
                         `;
                     } else {
@@ -1579,15 +1585,15 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <p class="place-description">${place.description || 'N/A'}</p>
                                         <div class="place-meta">
                                             <span class="place-price">${place.price}€/nuit</span>
-                                            <span class="place-location">📍 ${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}</span>
+                                            <span class="place-location">${place.latitude.toFixed(2)}, ${place.longitude.toFixed(2)}</span>
                                             <span class="place-rating" style="color: #f39c12; font-weight: bold;">
                                                 <span style="font-size: 14px;">⭐</span> <span class="rating-value">5</span>/5
                                             </span>
                                         </div>
                                         <div class="place-actions">
-                                            <button class="view-place-reviews-btn" data-place-id="${place.id}">💬 Reviews</button>
-                                            <button class="edit-place-btn" data-place-id="${place.id}">✏️ Modifier</button>
-                                            <button class="delete-place-btn" data-place-id="${place.id}">🗑️ Supprimer</button>
+                                            <button class="view-place-reviews-btn" data-place-id="${place.id}">Reviews</button>
+                                            <button class="edit-place-btn" data-place-id="${place.id}">Modifier</button>
+                                            <button class="delete-place-btn" data-place-id="${place.id}">Supprimer</button>
                                         </div>
                                     </div>
                                 </div>

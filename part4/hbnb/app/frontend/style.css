@@ -348,7 +348,7 @@ main td p {
 
 .auth-card {
   width: 100%;
-  max-width: 380px;
+  max-width: 500px;
   background: rgba(255, 255, 255, 0.68);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
