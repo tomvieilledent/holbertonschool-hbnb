@@ -1709,7 +1709,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const editModalHTML = `
                 <div id="place-edit-modal" class="auth-modal-bg" style="display: none;">
                     <div class="center-auth-card">
-                        <div class="auth-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div class="auth-card" style="width: 350px !important; max-height: 90vh; overflow-y: auto;">
                             <h1>${place.title}</h1>
                             <hr>
                             <h3>Modifier la place</h3>
@@ -1753,18 +1753,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, 10);
 
+            // Load amenities for editing
+            loadAmenitiesForEditPlace('edit-place-amenities-list', place.amenities);
+
             // Handle form submission
             setTimeout(function() {
                 const editForm = document.getElementById('edit-place-form');
                 if (editForm) {
                     editForm.addEventListener('submit', function(e) {
                         e.preventDefault();
+                        const amenityCheckboxes = document.querySelectorAll('#edit-place-amenities-list input[type="checkbox"]:checked');
+                        const selectedAmenities = Array.from(amenityCheckboxes).map(checkbox => checkbox.value);
+                        
                         const formData = {
                             title: document.getElementById('edit-place-title').value,
                             description: document.getElementById('edit-place-description').value,
                             price: parseFloat(document.getElementById('edit-place-price').value),
                             latitude: parseFloat(document.getElementById('edit-place-latitude').value),
-                            longitude: parseFloat(document.getElementById('edit-place-longitude').value)
+                            longitude: parseFloat(document.getElementById('edit-place-longitude').value),
+                            amenities: selectedAmenities
                         };
 
                         fetch(`http://127.0.0.1:5000/api/v1/places/${placeId}`, {
