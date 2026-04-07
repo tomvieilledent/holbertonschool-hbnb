@@ -465,29 +465,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(data => {
-            // Sauvegarder le token JWT et l'ID utilisateur
+            // Sauvegarder le token JWT, l'ID utilisateur et le statut admin
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('user_email', email);
             localStorage.setItem('user_id', data.user_id);
             
-            // Fermer la modale et mettre à jour l'interface
-            closeAuthModal();
-            openBtn.style.display = 'none';
-            logoutBtn.style.display = 'inline-block';
-            
-            // Load user info and display profile button with initials
+            // Récupérer et sauvegarder le statut admin
             fetch(`http://127.0.0.1:5000/api/v1/users/${data.user_id}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' }
             })
             .then(r => r.json())
             .then(user => {
+                localStorage.setItem('is_admin', user.is_admin); // Sauvegarde du statut admin
+
                 const initials = (user.first_name?.charAt(0) || '') + (user.last_name?.charAt(0) || '');
                 const profileBtn = document.getElementById('profile-btn');
                 profileBtn.textContent = initials.toUpperCase();
                 profileBtn.style.display = 'inline-block';
                 
-                // Vérifier si l'utilisateur est admin
+                // Afficher les boutons admin ou utilisateur
                 if (user.is_admin) {
                     adminPanelBtn.style.display = 'inline-block';
                     createPlaceBtn.style.display = 'none';
@@ -497,6 +494,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
+            // Fermer la modale et mettre à jour l'interface
+            closeAuthModal();
+            openBtn.style.display = 'none';
+            logoutBtn.style.display = 'inline-block';
+            
             openBtn.classList.remove('active');
             isConnected = true;
             
@@ -505,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
             
-            // Message de succès (optionnel)
+            // Message de succès
             showNotification('Connexion réussie!', 'success');
         })
         .catch(error => {
@@ -1136,20 +1138,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
         mainContent.classList.add('blur-bg');
         
-        // Récupérer les détails complets de la place
-        fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(r => r.json())
-        .then(fullPlace => {
+        // Récupérer les détails complets de la place et les avis en parallèle
+        Promise.all([
+            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`).then(r => r.json()),
+            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`).then(r => r.json())
+        ])
+        .then(([fullPlace, reviews]) => {
             // Afficher les détails complets
             const amenitiesHTML = fullPlace.amenities && fullPlace.amenities.length > 0 
                 ? `<div style="margin: 15px 0;"><h4>Commodités</h4><div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">${fullPlace.amenities.map(a => `<span style="background-color: #e8f4f8; padding: 8px; border-radius: 4px; font-size: 14px;">• ${a.name}</span>`).join('')}</div></div><hr style="margin: 15px 0;">`
                 : '';
-            
+
             placeDetailContent.innerHTML = `
                 <div class="place-detail-header">
                     <img src="${imgSrc}" alt="${fullPlace.title}" style="width: 100%; max-height: 300px; object-fit: cover; margin-bottom: 15px; border-radius: 8px;">
@@ -1158,51 +1157,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><strong>Description:</strong> ${fullPlace.description || 'N/A'}</p>
                     <p><strong>Localisation:</strong> Lat ${fullPlace.latitude || 'N/A'}, Lon ${fullPlace.longitude || 'N/A'}</p>
                 </div>
-                
                 <hr style="margin: 15px 0;">
-                
                 ${amenitiesHTML}
-                
-                <div id="reviews-list" class="reviews-section">
-                    <h3>Avis</h3>
-                    <p>Chargement des avis...</p>
-                </div>
-                
+                <div id="reviews-list" class="reviews-section"><h3>Avis</h3></div>
                 <div id="review-form-section"></div>
             `;
+
+            const reviewsList = document.getElementById('reviews-list');
             
-            // Charger les reviews pour cette place
-            fetch(`http://127.0.0.1:5000/api/v1/places/${fullPlace.id}/reviews`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
+            // Calculer la moyenne des reviews
+            let averageRating = 5;
+            if (reviews && reviews.length > 0) {
+                const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+                averageRating = (totalRating / reviews.length).toFixed(1);
+            }
+            
+            // Mettre à jour le header avec la note moyenne
+            const placeHeader = document.querySelector('.place-detail-header');
+            if (placeHeader) {
+                const titleElement = placeHeader.querySelector('h2');
+                if (titleElement && !placeHeader.querySelector('.average-rating')) {
+                    const ratingHTML = `<p class="average-rating" style="color: #f39c12; font-weight: bold; margin: 10px 0;"><span style="font-size: 20px;">⭐</span> ${averageRating}/5 (${reviews ? reviews.length : 0} avis)</p>`;
+                    titleElement.insertAdjacentHTML('afterend', ratingHTML);
                 }
-            })
-            .then(response => response.json())
-            .then(reviews => {
-                const reviewsList = document.getElementById('reviews-list');
-                
-                // Calculer la moyenne des reviews
-                let averageRating = 5;
-                if (reviews && reviews.length > 0) {
-                    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
-                    averageRating = (totalRating / reviews.length).toFixed(1);
-                }
-                
-                // Mettre à jour le header avec la note moyenne
-                const placeHeader = document.querySelector('.place-detail-header');
-                if (placeHeader) {
-                    const titleElement = placeHeader.querySelector('h2');
-                    if (titleElement && !placeHeader.querySelector('.average-rating')) {
-                        const ratingHTML = `<p class="average-rating" style="color: #f39c12; font-weight: bold; margin: 10px 0;"><span style="font-size: 20px;">⭐</span> ${averageRating}/5 (${reviews ? reviews.length : 0} avis)</p>`;
-                        titleElement.insertAdjacentHTML('afterend', ratingHTML);
-                    }
-                }
-                
-                if (!reviews || reviews.length === 0) {
-                    reviewsList.innerHTML = '<h3>Avis</h3><p>Aucun avis pour le moment</p>';
-                } else {
-                    let reviewsHTML = '<h3>Avis</h3>';
+            }
+            
+            if (!reviews || reviews.length === 0) {
+                reviewsList.innerHTML += '<p>Aucun avis pour le moment</p>';
+            } else {
                 reviews.forEach(review => {
                     let reviewContent = `
                         <div class="review-item">
@@ -1210,8 +1192,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="review-rating">⭐ ${review.rating}/5</span>
                                 <span class="review-user">${review.user?.first_name || 'Anonyme'}</span>
                     `;
-                    
-                    // Ajouter les boutons modifier/supprimer si c'est la review de l'utilisateur connecté
                     if (token && userId && review.user_id === userId) {
                         reviewContent += `
                             <div class="review-actions">
@@ -1220,17 +1200,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         `;
                     }
-                    
                     reviewContent += `
                             </div>
                             <p class="review-text">${review.text || 'Pas de commentaire'}</p>
                         </div>
                     `;
-                    reviewsHTML += reviewContent;
+                    reviewsList.innerHTML += reviewContent;
                 });
-                reviewsList.innerHTML = reviewsHTML;
                 
-                // Ajouter les event listeners pour les boutons
                 document.querySelectorAll('.review-delete-btn').forEach(btn => {
                     btn.onclick = function(e) {
                         e.preventDefault();
@@ -1250,136 +1227,81 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                 });
             }
+
+            // Section formulaire de review
+            const formSection = document.getElementById('review-form-section');
+            if (token) {
+                const userId = localStorage.getItem('user_id');
+                const isAdmin = localStorage.getItem('is_admin') === 'true';
+                const isOwner = fullPlace.owner_id === userId || (fullPlace.owner && fullPlace.owner.id === userId);
+                const userReview = reviews.find(r => r.user_id === userId);
+
+                if (isAdmin) {
+                    formSection.innerHTML = `<hr style="margin: 15px 0;"><div class="review-section info-section"><p class="info-message">Les administrateurs ne peuvent pas laisser d'avis.</p></div>`;
+                } else if (isOwner) {
+                    formSection.innerHTML = `<hr style="margin: 15px 0;"><div class="review-section error-section"><p class="error-message">Vous ne pouvez pas laisser d'avis sur votre propre place</p></div>`;
+                } else if (userReview) {
+                    formSection.innerHTML = `<hr style="margin: 15px 0;"><div class="review-section"><p class="info-message">Vous avez déjà laissé un avis. Modifiez ou supprimez-le ci-dessus.</p></div>`;
+                } else {
+                    formSection.innerHTML = `
+                        <hr style="margin: 15px 0;">
+                        <div class="review-section">
+                            <h3>Ajouter un avis</h3>
+                            <form id="review-form">
+                                <label for="review-rating">Note (1-5)</label>
+                                <select id="review-rating" required>
+                                    <option value="">Sélectionner une note</option>
+                                    <option value="1">1 - Mauvais</option>
+                                    <option value="2">2 - Moyen</option>
+                                    <option value="3">3 - Bon</option>
+                                    <option value="4">4 - Très bon</option>
+                                    <option value="5">5 - Excellent</option>
+                                </select>
+                                <label for="review-text">Votre avis</label>
+                                <textarea id="review-text" placeholder="Partagez votre expérience..." rows="3"></textarea>
+                                <button type="submit" class="auth-btn">Envoyer l'avis</button>
+                            </form>
+                        </div>
+                    `;
+                    
+                    setTimeout(function() {
+                        document.getElementById('review-form').onsubmit = function(e) {
+                            e.preventDefault();
+                            const rating = parseInt(document.getElementById('review-rating').value);
+                            const text = document.getElementById('review-text').value;
+                            
+                            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ rating, text })
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(data => { throw new Error(data.message || 'Erreur d\'envoi'); });
+                                }
+                                return response.json();
+                            })
+                            .then(() => {
+                                showNotification('Avis envoyé avec succès!', 'success');
+                                showPlaceDetailModal(place, imgSrc); // Recharger
+                            })
+                            .catch(error => {
+                                showNotification('Erreur: ' + error.message, 'error');
+                            });
+                        };
+                    }, 50);
+                }
+            } else {
+                formSection.innerHTML = `<hr style="margin: 15px 0;"><div class="review-section"><p class="login-prompt">Connectez-vous pour ajouter un avis</p></div>`;
+            }
         })
         .catch(error => {
-            console.error('Erreur lors du chargement des reviews:', error);
-            document.getElementById('reviews-list').innerHTML = '<h3>Avis</h3><p>Erreur lors du chargement des avis</p>';
+            console.error('Erreur lors du chargement:', error);
+            placeDetailContent.innerHTML = `<p>Erreur lors du chargement des détails de la place.</p>`;
         });
-            })
-            .catch(error => {
-                console.error('Erreur lors du chargement des détails:', error);
-            });
-        
-        // Section formulaire de review
-        const formSection = document.getElementById('review-form-section');
-        
-        if (token) {
-            // Vérifier si l'utilisateur est le propriétaire ou a déjà une review
-            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(fullPlace => {
-                // Charger les reviews à nouveau pour vérifier si l'utilisateur en a une
-                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(reviews => {
-                    const isOwner = fullPlace.owner && fullPlace.owner.id === userId;
-                    const userReview = reviews.find(r => r.user_id === userId);
-                    
-                    if (isOwner) {
-                        formSection.innerHTML = `
-                            <hr style="margin: 15px 0;">
-                            <div class="review-section error-section">
-                                <p class="error-message">Vous ne pouvez pas laisser d'avis sur votre propre place</p>
-                            </div>
-                        `;
-                    } else if (userReview) {
-                        formSection.innerHTML = `
-                            <hr style="margin: 15px 0;">
-                            <div class="review-section">
-                                <p class="info-message">Vous avez déjà laissé un avis. Modifiez ou supprimez-le ci-dessus.</p>
-                            </div>
-                        `;
-                    } else {
-                        formSection.innerHTML = `
-                            <hr style="margin: 15px 0;">
-                            <div class="review-section">
-                                <h3>Ajouter un avis</h3>
-                                <form id="review-form">
-                                    <label for="review-rating">Note (1-5)</label>
-                                    <select id="review-rating" required>
-                                        <option value="">Sélectionner une note</option>
-                                        <option value="1">1 - Mauvais</option>
-                                        <option value="2">2 - Moyen</option>
-                                        <option value="3">3 - Bon</option>
-                                        <option value="4">4 - Très bon</option>
-                                        <option value="5">5 - Excellent</option>
-                                    </select>
-                                    <label for="review-text">Votre avis</label>
-                                    <textarea id="review-text" placeholder="Partagez votre expérience..." rows="3"></textarea>
-                                    <button type="submit" class="auth-btn">Envoyer l'avis</button>
-                                </form>
-                            </div>
-                        `;
-                        
-                        setTimeout(function() {
-                            document.getElementById('review-form').onsubmit = function(e) {
-                                e.preventDefault();
-                                
-                                const rating = parseInt(document.getElementById('review-rating').value);
-                                const text = document.getElementById('review-text').value;
-                                
-                                const submitBtn = document.querySelector('#review-form button[type="submit"]');
-                                const originalBtnText = submitBtn.textContent;
-                                
-                                submitBtn.disabled = true;
-                                submitBtn.textContent = 'Envoi...';
-                                
-                                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}/reviews`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({
-                                        rating,
-                                        text
-                                    })
-                                })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        return response.json().then(data => {
-                                            throw new Error(data.message || data.error || 'Erreur d\'envoi');
-                                        });
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    showNotification('Avis envoyé avec succès!', 'success');
-                                    document.getElementById('review-form').reset();
-                                    submitBtn.disabled = false;
-                                    submitBtn.textContent = originalBtnText;
-                                    // Recharger la modale pour voir le nouvel avis
-                                    showPlaceDetailModal(place, imgSrc);
-                                })
-                                .catch(error => {
-                                    submitBtn.disabled = false;
-                                    submitBtn.textContent = originalBtnText;
-                                    showNotification('Erreur: ' + error.message, 'error');
-                                    console.error('Erreur d\'envoi d\'avis:', error);
-                                });
-                            };
-                        }, 50);
-                    }
-                });
-            });
-        } else {
-            formSection.innerHTML = `
-                <hr style="margin: 15px 0;">
-                <div class="review-section">
-                    <p class="login-prompt">Connectez-vous pour ajouter un avis</p>
-                </div>
-            `;
-        }
     }
     
     // Fonction pour supprimer une review
