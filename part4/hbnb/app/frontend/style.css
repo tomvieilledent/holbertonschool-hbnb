@@ -190,7 +190,7 @@ footer {
   box-shadow: 0 4px 16px rgba(0, 123, 255, 0.18);
 }
 .admin-panel-btn {
-  background: #dc3545;
+  background: #c00;
   color: #fff;
   border: none;
   border-radius: 25px;
@@ -212,7 +212,7 @@ footer {
   margin-left: 10px;
 }
 .admin-panel-btn:hover {
-  background: #c82333;
+  background: #a00;
   box-shadow: 0 4px 16px rgba(220, 53, 69, 0.18);
 }
 /* Bouton principal (Register/Se connecter) */
@@ -826,7 +826,7 @@ footer div {
 }
 
 .delete-place-btn {
-  background-color: #dc3545;
+  background-color: #c00;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -838,7 +838,7 @@ footer div {
 }
 
 .delete-place-btn:hover {
-  background-color: #c82333;
+  background-color: #a00;
 }
 
 .view-place-reviews-btn {
