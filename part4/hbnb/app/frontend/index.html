@@ -105,7 +105,7 @@
                             </form>
                             <hr>
                             <h3>Mes Places</h3>
-                            <div id="my-places-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;"></div>
+                            <div id="my-places-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 15px;"></div>
                         </div>
                     </div>
                 </div>
@@ -1039,7 +1039,8 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
             closePlaceModal();
-            loadPlaces(); // Recharger la liste des places
+            loadPlaces();
+            loadMyPlaces();
         })
         .catch(error => {
             submitBtn.disabled = false;
@@ -1310,7 +1311,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             })
                             .then(() => {
                                 showNotification('Avis envoyé avec succès!', 'success');
-                                showPlaceDetailModal(place, imgSrc); // Recharger
+                                // Refetch la place pour avoir les données fraîches avec les nouvelles reviews
+                                fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`)
+                                    .then(r => r.json())
+                                    .then(freshPlace => {
+                                        loadPlaces(); // Recharger la page principale
+                                        setTimeout(() => showPlaceDetailModal(freshPlace, imgSrc), 100); // Recharger la modale avec les données fraîches
+                                    });
                             })
                             .catch(error => {
                                 showNotification('Erreur: ' + error.message, 'error');
@@ -1348,7 +1355,13 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             showNotification('Avis supprimé avec succès!', 'success');
-            showPlaceDetailModal(place, imgSrc);
+            // Refetch la place pour avoir les données fraîches
+            fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`)
+                .then(r => r.json())
+                .then(freshPlace => {
+                    loadPlaces(); // Recharger la page principale
+                    setTimeout(() => showPlaceDetailModal(freshPlace, imgSrc), 100); // Recharger la modale
+                });
         })
         .catch(error => {
             showNotification('Erreur: ' + error.message, 'error');
@@ -1417,7 +1430,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Avis mis à jour avec succès!', 'success');
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalBtnText;
-                    showPlaceDetailModal(place, imgSrc);
+                    // Refetch la place pour avoir les données fraîches
+                    fetch(`http://127.0.0.1:5000/api/v1/places/${place.id}`)
+                        .then(r => r.json())
+                        .then(freshPlace => {
+                            loadPlaces(); // Recharger la page principale
+                            setTimeout(() => showPlaceDetailModal(freshPlace, imgSrc), 100); // Recharger la modale
+                        });
                 })
                 .catch(error => {
                     submitBtn.disabled = false;
@@ -1792,7 +1811,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     setTimeout(function() {
                                         editModal.remove();
                                         mainContent.classList.remove('blur-bg');
-                                        loadMyPlaces();
+                                        loadPlaces(); // Recharger le tableau principal
+                                        loadMyPlaces(); // Recharger le profil
                                     }, 350);
                                 }
                             } else {
@@ -1845,7 +1865,9 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.ok) {
-                loadMyPlaces();
+                showNotification('Place supprimée avec succès', 'success');
+                loadPlaces(); // Recharger le tableau principal
+                loadMyPlaces(); // Recharger le profil
             } else {
                 showNotification('Erreur lors de la suppression', 'error');
             }

@@ -339,7 +339,7 @@ main td p {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.25);
-  z-index: 1000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
